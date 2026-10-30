@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #eef2ff;
+            --card-bg: #ffffff;
+            --text-dark: #333;
+            --text-gray: #666;
+            --icon-color: #1d3bba;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warn: #f39c12;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP SLIDER --- */
+        .slider-container { position: relative; width: 100%; height: 200px; padding: 15px; }
+        .slider-wrapper { width: 100%; height: 100%; border-radius: 20px; overflow: hidden; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .slide.active { opacity: 1; }
+        .notification-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.8); width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: var(--primary-blue); cursor: pointer; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .slider-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; }
+        .dot { width: 8px; height: 8px; background: rgba(255,255,255,0.5); border-radius: 50%; transition: 0.3s; }
+        .dot.active { width: 20px; border-radius: 5px; background: #fff; }
+
+        /* --- GRID MENU --- */
+        .grid-menu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 10px; padding: 10px 20px 20px 20px; }
+        .menu-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--text-dark); }
+        .menu-icon { font-size: 28px; color: var(--icon-color); margin-bottom: 8px; }
+        .menu-item span { font-size: 13px; font-weight: 500; }
+        .grid-menu .menu-item:nth-child(7) { grid-column: 1 / 2; }
+
+        /* --- DAILY CHECK-IN STATUS CARD --- */
+        .checkin-card {
+            margin: 0 15px 20px 15px;
+            background: linear-gradient(135deg, #1d3bba 0%, #3b5bdb 100%);
+            border-radius: 20px;
+            padding: 18px;
+            color: white;
+            box-shadow: 0 6px 18px rgba(29, 59, 186, 0.25);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+        .checkin-card::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .checkin-card.inactive {
+            background: linear-gradient(135deg, #8a94a6 0%, #b5bcc9 100%);
+            box-shadow: 0 6px 18px rgba(138, 148, 166, 0.25);
+        }
+        .checkin-card.done {
+            background: linear-gradient(135deg, #00a896 0%, #2ecc71 100%);
+            box-shadow: 0 6px 18px rgba(0, 168, 150, 0.25);
+        }
+        .checkin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .checkin-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkin-day-badge {
+            background: rgba(255,255,255,0.25);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .checkin-desc {
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.95;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .checkin-btn {
+            width: 100%;
+            background: #ffffff;
+            color: var(--primary-blue);
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+        .checkin-btn:active { transform: scale(0.97); }
+        .checkin-btn:disabled {
+            background: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.95);
+            cursor: not-allowed;
+        }
+        .checkin-card.done .checkin-btn:disabled {
+            background: rgba(255,255,255,0.35);
+            color: #fff;
+        }
+        .checkin-progress {
+            height: 5px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .checkin-progress-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.6s ease;
+        }
+
+        /* --- COMMUNITY CARDS --- */
+        .community-section { display: flex; gap: 15px; padding: 0 20px 20px 20px; }
+        .community-card { flex: 1; background: var(--card-bg); border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); cursor: pointer; position: relative; overflow: hidden; }
+        .community-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; }
+        .tg-icon { background: #0088cc; }
+        .vip-icon { background: #00bcd4; }
+        .community-text { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.2; }
+        .lock-icon { position: absolute; top: 15px; right: 15px; color: #999; font-size: 14px; }
+
+        /* --- PRODUCTS SECTION --- */
+        .products-section { padding: 0 15px 20px 15px; }
+        .product-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: none; }
+        .product-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { padding: 8px 20px; border-radius: 20px; border: 1px solid #d0d7ff; background: #fff; color: var(--text-gray); font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+
+        .product-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .product-header { display: flex; gap: 15px; margin-bottom: 15px; }
+        .product-img { width: 80px; height: 80px; border-radius: 15px; background: #0b1a30; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+        .product-img img { width: 60px; height: 60px; object-fit: contain; }
+        .product-info { flex: 1; }
+        .product-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 5px; }
+
+        .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .progress-bar-bg { flex: 1; height: 6px; background: #eef2ff; border-radius: 3px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--primary-blue); border-radius: 3px; width: 0%; transition: width 1s ease; }
+        .progress-text { font-size: 13px; font-weight: 600; color: var(--primary-blue); }
+
+        .product-details { font-size: 13px; color: var(--text-gray); line-height: 1.5; }
+        .product-details span { display: block; }
+        .capital-return { color: var(--primary-blue); font-weight: 600; font-size: 14px; margin-top: 5px; }
+
+        .buy-btn { background: var(--primary-blue); color: white; border: none; padding: 8px 25px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; float: right; transition: 0.3s; }
+        .buy-btn:disabled { background: #999; cursor: not-allowed; }
+
+        .limit-badge { display: inline-block; background: #eef2ff; color: var(--primary-blue); font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 15px; margin: 15px 0; }
+
+        .product-stats { display: flex; justify-content: space-between; border-top: 1px solid #f0f0f0; padding-top: 15px; margin-top: 10px; }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 18px; font-weight: 700; color: var(--primary-blue); }
+        .stat-lbl { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+        .product-footer { font-size: 11px; color: var(--text-gray); margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 10px; }
+
+        /* --- EMPTY STATE --- */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .empty-state i {
+            font-size: 45px;
+            color: #c5cde8;
+            margin-bottom: 12px;
+        }
+        .empty-state p {
+            font-size: 14px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+
+        /* --- WELCOME MODAL --- */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.72);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 15px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .welcome-modal {
+            background: #ffffff;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 25px;
+            overflow: hidden;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            display: flex; flex-direction: column;
+            max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+        .modal-overlay.active .welcome-modal { transform: translateY(0); }
+
+        .welcome-banner {
+            width: 100%; height: 130px;
+            background-size: cover; background-position: center;
+            position: relative; flex-shrink: 0;
+        }
+        .close-modal {
+            position: absolute; top: 15px; right: 15px;
+            background: #ffffff; width: 30px; height: 30px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        .modal-logo {
+            width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid #fff; background: #000;
+            position: absolute; bottom: -30px; left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            object-fit: cover;
+        }
+
+        .modal-content {
+            padding: 42px 20px 20px 20px;
+            width: 100%;
+            overflow-y: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .modal-content::-webkit-scrollbar { display: none; }
+
+        .modal-title {
+            font-size: 20px; font-weight: 700;
+            color: var(--text-dark); text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        .info-box h4 {
+            font-size: 13px; color: var(--primary-blue);
+            margin-bottom: 10px; text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .info-box p, .info-box li {
+            font-size: 12px; color: var(--text-gray); line-height: 1.6;
+        }
+        .info-box ul { padding-left: 16px; }
+
+        .get-started-btn {
+            width: 100%;
+            background: var(--primary-blue); color: white;
+            border: none; padding: 15px;
+            border-radius: 25px;
+            font-size: 15px; font-weight: 600;
+            cursor: pointer; margin-top: 5px;
+            transition: 0.2s;
+        }
+        .get-started-btn:active { transform: scale(0.98); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(231, 76, 60, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.success { background: rgba(0, 168, 150, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .loading-text { text-align: center; color: #666; font-size: 12px; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOP SLIDER ============ -->
+    <div class="slider-container">
+        <div class="notification-btn"><i class="fa-regular fa-bell"></i></div>
+        <div class="slider-wrapper" id="slider">
+            <div class="slide active" style="background-image: url('image1.png');"></div>
+            <div class="slide" style="background-image: url('image2.png');"></div>
+            <div class="slide" style="background-image: url('image3.png');"></div>
+            <div class="slider-dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ GRID MENU ============ -->
+    <div class="grid-menu">
+        <a href="treasure.html" class="menu-item"><i class="fa-solid fa-piggy-bank menu-icon"></i><span>Treasure</span></a>
+        <a href="recharge.html" class="menu-item"><i class="fa-solid fa-wallet menu-icon"></i><span>Recharge</span></a>
+        <a href="withdraw.html" class="menu-item"><i class="fa-solid fa-credit-card menu-icon"></i><span>Withdraw</span></a>
+        <a href="invite.html" class="menu-item"><i class="fa-solid fa-gift menu-icon"></i><span>Invite</span></a>
+        <a href="reward.html" class="menu-item"><i class="fa-solid fa-crown menu-icon"></i><span>Reward</span></a>
+        <a href="checkin.html" class="menu-item"><i class="fa-solid fa-calendar-check menu-icon"></i><span>Check-in</span></a>
+        <a href="salary.html" class="menu-item"><i class="fa-solid fa-money-check-dollar menu-icon"></i><span>Salary</span></a>
+    </div>
+
+    <!-- ============ DAILY CHECK-IN STATUS CARD ============ -->
+    <div class="checkin-card inactive" id="checkinCard">
+        <div class="checkin-header">
+            <div class="checkin-title">
+                <i class="fa-solid fa-gift"></i>
+                <span>Daily Check-In</span>
+            </div>
+            <div class="checkin-day-badge" id="checkinDayBadge">— / —</div>
+        </div>
+        <div class="checkin-desc" id="checkinDesc">Loading...</div>
+        <div class="checkin-progress">
+            <div class="checkin-progress-fill" id="checkinProgressFill"></div>
+        </div>
+        <button class="checkin-btn" id="checkinBtn" disabled>
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <span>Loading...</span>
+        </button>
+    </div>
+
+    <!-- ============ COMMUNITY CARDS ============ -->
+    <div class="community-section">
+        <div class="community-card" onclick="window.open('https://t.me/your_telegram_link', '_blank')">
+            <div class="community-icon tg-icon"><i class="fa-brands fa-telegram"></i></div>
+            <div class="community-text">Telegram<br>Group</div>
+        </div>
+        <div class="community-card" onclick="checkVIPAccess()">
+            <i class="fa-solid fa-lock lock-icon"></i>
+            <div class="community-icon vip-icon"><i class="fa-solid fa-crown"></i></div>
+            <div class="community-text">VIP<br>Community</div>
+        </div>
+    </div>
+
+    <!-- ============ PRODUCTS SECTION ============ -->
+    <div class="products-section">
+        <div class="product-tabs" id="productTabs">
+            <button class="tab-btn active" data-category="ordinary">Ordinary Projects</button>
+            <button class="tab-btn" data-category="limited">Limited-Time</button>
+            <button class="tab-btn" data-category="hot">Hot</button>
+            <button class="tab-btn" data-category="soldout">Sold Out Projects</button>
+        </div>
+
+        <div id="productsContainer">
+            <p class="loading-text">Loading projects...</p>
+        </div>
+    </div>
+
+    <!-- ============ BOTTOM NAVIGATION ============ -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <!-- ============ WELCOME MODAL ============ -->
+    <div class="modal-overlay" id="welcomeModal">
+        <div class="welcome-modal">
+            <div class="welcome-banner" style="background-image: url('image1.png');">
+                <div class="close-modal" onclick="closeWelcomeModal()"><i class="fa-solid fa-xmark"></i></div>
+                <img src="logo.png" alt="Nexfund Logo" class="modal-logo">
+            </div>
+            <div class="modal-content">
+                <h2 class="modal-title">NEXFUND NAIRA</h2>
+
+                <!-- Only Check-In Rules box remains -->
+                <div class="info-box">
+                    <h4><i class="fa-solid fa-gift"></i> Daily Check-In Rules</h4>
+                    <p><strong>Strictly for investors only.</strong> The Daily Check-In is available in limited quantities and is reserved exclusively for users with an active product.</p>
+                    <p style="margin-top:8px;">You must have an active product to participate. For example: if you purchase a <strong>₦6,000 product with a 2-day cycle</strong> (earning ₦8,400 at maturity), you can claim your Daily Check-In for <strong>2 days only</strong>.</p>
+                    <p style="margin-top:8px;">After your product expires, you will no longer be able to claim — you become like a non-investor. To qualify again, you must purchase a new product.</p>
+                    <p style="margin-top:8px;"><strong>Reward:</strong> ₦200 per day, credited to your withdrawal wallet.</p>
+                </div>
+
+                <button class="get-started-btn" onclick="closeWelcomeModal()">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOAST ============ -->
+    <div class="toast" id="toast">Message</div>
+        <!-- ============ FIREBASE SDKs ============ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // =========================================================
+        // 1. FIREBASE INIT
+        // =========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // =========================================================
+        // 2. ORIGINAL HARDCODED ORDINARY PRODUCTS
+        // =========================================================
+        const PRODUCT_SLOTS = 250;
+        const CHECKIN_AMOUNT = 200;
+
+        const ORDINARY_PRODUCTS = [
+            { id: 'p1', name: 'Nexfund A', duration: 2,  limit: 1, price: 6000,  totalReturn: 8400,   category: 'ordinary' },
+            { id: 'p2', name: 'Nexfund B', duration: 5,  limit: 1, price: 13000, totalReturn: 18850,  category: 'ordinary' },
+            { id: 'p3', name: 'Nexfund C', duration: 10, limit: 1, price: 24000, totalReturn: 35500,  category: 'ordinary' },
+            { id: 'p4', name: 'Nexfund D', duration: 20, limit: 2, price: 42000, totalReturn: 63000,  category: 'ordinary' },
+            { id: 'p5', name: 'Nexfund E', duration: 30, limit: 2, price: 65000, totalReturn: 129350, category: 'ordinary' },
+            { id: 'p6', name: 'Nexfund F', duration: 40, limit: 2, price: 95000, totalReturn: 209000, category: 'ordinary' }
+        ];
+
+        // =========================================================
+        // 3. STATE
+        // =========================================================
+        let currentUserData = null;
+        let firestoreProducts = [];     // admin-added products
+        let globalSoldCounts = {};      // { productId: count }
+        let currentCategory = 'ordinary';
+
+        // =========================================================
+        // 4. HELPERS
+        // =========================================================
+        function todayString() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function showToast(message, isSuccess = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isSuccess ? ' success' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // Return ALL products (ordinary hardcoded + firestore), unified
+        function getAllProducts() {
+            return [...ORDINARY_PRODUCTS, ...firestoreProducts];
+        }
+
+        // =========================================================
+        // 5. LOAD FIRESTORE PRODUCTS (admin-added only)
+        // =========================================================
+        async function loadFirestoreProducts() {
+            try {
+                const snap = await db.collection("products")
+                    .where("active", "==", true)
+                    .get();
+
+                firestoreProducts = [];
+                snap.forEach(doc => {
+                    firestoreProducts.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (err) {
+                console.error("Failed to load Firestore products:", err);
+                firestoreProducts = [];
+            }
+        }
+
+        // =========================================================
+        // 6. GLOBAL SOLD COUNTS (all users' purchasedProducts)
+        // =========================================================
+        async function computeGlobalSoldCounts() {
+            const counts = {};
+            try {
+                const snap = await db.collection("users").get();
+                snap.forEach(doc => {
+                    const bought = doc.data().purchasedProducts || {};
+                    Object.keys(bought).forEach(pid => {
+                        counts[pid] = (counts[pid] || 0) + (Number(bought[pid]) || 0);
+                    });
+                });
+            } catch (err) {
+                console.error("Failed to compute sold counts:", err);
+            }
+            globalSoldCounts = counts;
+        }
+
+        // =========================================================
+        // 7. CHECK-IN ELIGIBILITY ENGINE (Option A)
+        // =========================================================
+        async function evaluateCheckInStatus(uid, userData) {
+            const snap = await db.collection("investments")
+                .where("userId", "==", uid)
+                .where("status", "==", "active")
+                .get();
+
+            if (snap.empty) {
+                return { state: 'NO_PRODUCT', claimsUsed: 0, cap: 0 };
+            }
+
+            let longest = null;
+            snap.forEach(doc => {
+                const inv = doc.data();
+                const expiry = inv.expiryDate && inv.expiryDate.toDate
+                    ? inv.expiryDate.toDate()
+                    : new Date(inv.expiryDate);
+                if (!longest || expiry > longest.expiry) {
+                    longest = { id: doc.id, ...inv, expiry };
+                }
+            });
+
+            const cap = longest.duration || 0;
+            const claimsUsed = (userData.dailyCheckIn && userData.dailyCheckIn.claimsThisCycle) || 0;
+
+            if (claimsUsed >= cap) {
+                return { state: 'CYCLE_COMPLETE', claimsUsed, cap };
+            }
+
+            const lastClaim = (userData.dailyCheckIn && userData.dailyCheckIn.lastClaimDate) || null;
+            if (lastClaim === todayString()) {
+                return { state: 'ALREADY_CLAIMED', claimsUsed, cap };
+            }
+
+            return { state: 'ELIGIBLE', claimsUsed, cap };
+        }
+
+        // =========================================================
+        // 8. RENDER CHECK-IN CARD
+        // =========================================================
+        function renderCheckInCard(status) {
+            const card     = document.getElementById('checkinCard');
+            const desc     = document.getElementById('checkinDesc');
+            const btn      = document.getElementById('checkinBtn');
+            const badge    = document.getElementById('checkinDayBadge');
+            const progress = document.getElementById('checkinProgressFill');
+
+            card.classList.remove('inactive', 'done');
+            const { state, claimsUsed, cap } = status;
+
+            if (cap > 0) {
+                badge.innerText = `Day ${claimsUsed} / ${cap}`;
+                progress.style.width = `${Math.min((claimsUsed / cap) * 100, 100)}%`;
+            } else {
+                badge.innerText = '— / —';
+                progress.style.width = '0%';
+            }
+
+            if (state === 'NO_PRODUCT') {
+                card.classList.add('inactive');
+                desc.innerText = 'You need an active product to unlock your ₦200 daily check-in.';
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-ban"></i><span>No Active Product</span>`;
+                btn.onclick = null;
+            }
+            else if (state === 'CYCLE_COMPLETE') {
+                card.classList.add('inactive');
+                desc.innerText = `You have used all ${cap} check-ins for this cycle. Buy a new product to qualify again.`;
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i><span>Cycle Complete</span>`;
+                btn.onclick = null;
+            }
+            else if (state === 'ALREADY_CLAIMED') {
+                card.classList.add('done');
+                desc.innerText = 'You have claimed your ₦200 today. Come back tomorrow to claim again.';
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>Claimed Today — Come Back Tomorrow</span>`;
+                btn.onclick = null;
+            }
+            else {
+                desc.innerText = 'You are eligible to claim ₦200 today. Tap below to claim.';
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-arrow-right"></i><span>Go to Check-In</span>`;
+                btn.onclick = () => window.location.href = 'checkin.html';
+            }
+        }
+
+        // =========================================================
+        // 9. FILTER + RENDER FOR CURRENT TAB
+        // =========================================================
+        function renderProductsForTab() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '';
+
+            const allProducts = getAllProducts();
+            let filtered = [];
+
+            if (currentCategory === 'soldout') {
+                // Any product (ordinary or firestore) where sold >= 250
+                filtered = allProducts.filter(p => (globalSoldCounts[p.id] || 0) >= PRODUCT_SLOTS);
+            }
+            else if (currentCategory === 'ordinary') {
+                // The 6 hardcoded products (unless they've hit 250 → migrated to soldout)
+                filtered = ORDINARY_PRODUCTS.filter(p => (globalSoldCounts[p.id] || 0) < PRODUCT_SLOTS);
+            }
+            else {
+                // limited / hot → only Firestore products
+                filtered = firestoreProducts.filter(p =>
+                    p.category === currentCategory &&
+                    (globalSoldCounts[p.id] || 0) < PRODUCT_SLOTS
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-inbox"></i>
+                        <p>No projects available right now.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(product => {
+                const sold = globalSoldCounts[product.id] || 0;
+                const isSoldOut = sold >= PRODUCT_SLOTS;
+                const progressPercent = Math.min(Math.round((sold / PRODUCT_SLOTS) * 100), 100);
+
+                let userBoughtCount = 0;
+                if (currentUserData?.purchasedProducts?.[product.id]) {
+                    userBoughtCount = currentUserData.purchasedProducts[product.id];
+                }
+
+                const limit = product.limit || 1;
+                const isLimitReached = userBoughtCount >= limit;
+                const disableBuy = isLimitReached || isSoldOut;
+
+                let btnLabel = 'Buy';
+                if (isSoldOut) btnLabel = 'Sold Out';
+                else if (isLimitReached) btnLabel = 'Bought';
+
+                const formattedPrice = (product.price || 0).toLocaleString();
+                const formattedReturn = (product.totalReturn || 0).toLocaleString();
+                const duration = product.duration || 0;
+                const name = product.name || 'Unnamed Product';
+
+                const cardHTML = `
+                    <div class="product-card">
+                        <div class="product-header">
+                            <div class="product-img">
+                                <img src="logo.png" alt="${name}">
+                            </div>
+                            <div class="product-info">
+                                <div class="product-title">${name}</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar-bg">
+                                        <div class="progress-bar-fill" style="width: ${progressPercent}%;"></div>
+                                    </div>
+                                    <div class="progress-text">${progressPercent}%</div>
+                                </div>
+                                <div class="product-details">
+                                    <span>Duration: ${duration} Day${duration === 1 ? '' : 's'}</span>
+                                    <span>Capital + profit at cycle end:</span>
+                                    <span class="capital-return">₦${formattedReturn}</span>
+                                </div>
+                                <button class="buy-btn"
+                                    onclick="buyProduct('${product.id}')"
+                                    ${disableBuy ? 'disabled' : ''}>
+                                    ${btnLabel}
+                                </button>
+                                <div style="clear:both;"></div>
+                            </div>
+                        </div>
+
+                        <div class="limit-badge">
+                            Purchase limit: ${limit} time${limit > 1 ? 's' : ''} · Bought ${userBoughtCount}/${limit}
+                        </div>
+
+                        <div class="product-stats">
+                            <div class="stat-item">
+                                <div class="stat-val">${userBoughtCount}</div>
+                                <div class="stat-lbl">Purchased</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-val">${duration}</div>
+                                <div class="stat-lbl">Day${duration === 1 ? '' : 's'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-val">₦${formattedPrice}</div>
+                                <div class="stat-lbl">Price</div>
+                            </div>
+                        </div>
+
+                        <div class="product-footer">
+                            Capital + profit after ${duration} day${duration === 1 ? '' : 's'}: ₦${formattedReturn}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // =========================================================
+        // 10. TABS
+        // =========================================================
+        function setupTabs() {
+            const tabs = document.querySelectorAll('#productTabs .tab-btn');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentCategory = tab.dataset.category;
+                    renderProductsForTab();
+                });
+            });
+        }
+
+        // =========================================================
+        // 11. LOAD EVERYTHING
+        // =========================================================
+        async function loadUserAndRenderProducts() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '<p class="loading-text">Loading projects...</p>';
+
+            if (auth.currentUser) {
+                const userDoc = await db.collection("users").doc(auth.currentUser.uid).get();
+                if (userDoc.exists) currentUserData = userDoc.data();
+            }
+
+            await Promise.all([loadFirestoreProducts(), computeGlobalSoldCounts()]);
+
+            renderProductsForTab();
+
+            if (auth.currentUser && currentUserData) {
+                const status = await evaluateCheckInStatus(auth.currentUser.uid, currentUserData);
+                renderCheckInCard(status);
+            } else {
+                renderCheckInCard({ state: 'NO_PRODUCT', claimsUsed: 0, cap: 0 });
+            }
+        }
+
+        // =========================================================
+        // 12. BUY PRODUCT — REFERRAL BONUS = FIRST PURCHASE ONLY
+        // =========================================================
+        async function buyProduct(productId) {
+            if (!currentUserData) return showToast("User data not loaded. Please refresh.");
+
+            const product = getAllProducts().find(p => p.id === productId);
+            if (!product) return showToast("Product not found.");
+
+            const sold = globalSoldCounts[productId] || 0;
+            if (sold >= PRODUCT_SLOTS) return showToast("This product is sold out.");
+
+            const price = product.price || 0;
+            const currentBalance = currentUserData.depositWallet || 0;
+            if (currentBalance < price) {
+                return showToast("Insufficient balance in Deposit Wallet. Please recharge.");
+            }
+
+            if (!confirm(`Are you sure you want to purchase ${product.name} for ₦${price.toLocaleString()}?`)) return;
+
+            // Determine if this is the user's FIRST ever purchase
+            const alreadyBought = currentUserData.purchasedProducts || {};
+            const totalPreviousPurchases = Object.values(alreadyBought).reduce((s, v) => s + (Number(v) || 0), 0);
+            const isFirstPurchase = totalPreviousPurchases === 0;
+
+            try {
+                const userRef = db.collection("users").doc(auth.currentUser.uid);
+                const batch = db.batch();
+
+                batch.update(userRef, {
+                    "depositWallet": firebase.firestore.FieldValue.increment(-price),
+                    [`purchasedProducts.${productId}`]: firebase.firestore.FieldValue.increment(1)
+                });
+
+                const expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + (product.duration || 0));
+
+                const investmentRef = db.collection("investments").doc();
+                batch.set(investmentRef, {
+                    userId: auth.currentUser.uid,
+                    productId: productId,
+                    productName: product.name,
+                    amount: price,
+                    duration: product.duration || 0,
+                    expectedReturn: product.totalReturn || 0,
+                    status: 'active',
+                    purchaseDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    expiryDate: expiryDate
+                });
+
+                // Referral bonus — ONLY on first ever purchase
+                if (isFirstPurchase) {
+                    const creditUpline = async (refCode, bonusAmount) => {
+                        if (!refCode || refCode === "DIRECT") return;
+                        const q = await db.collection("users").where("myReferralCode", "==", refCode).get();
+                        if (!q.empty) {
+                            batch.update(q.docs[0].ref, {
+                                "withdrawalWallet": firebase.firestore.FieldValue.increment(bonusAmount)
+                            });
+                        }
+                    };
+
+                    await creditUpline(currentUserData.referredBy || null, price * 0.10);
+                    await creditUpline(currentUserData.uplineB || null, price * 0.03);
+                    await creditUpline(currentUserData.uplineC || null, price * 0.01);
+                }
+
+                await batch.commit();
+
+                showToast(`Successfully purchased ${product.name}!`, true);
+                setTimeout(() => loadUserAndRenderProducts(), 1500);
+
+            } catch (error) {
+                console.error("Purchase Error:", error);
+                showToast("Purchase failed. Please try again.");
+            }
+        }
+
+        // =========================================================
+        // 13. AUTO ROI ON LOGIN
+        // =========================================================
+        async function checkMaturedInvestments() {
+            if (!auth.currentUser) return;
+
+            const now = new Date();
+            const snap = await db.collection("investments")
+                .where("userId", "==", auth.currentUser.uid)
+                .where("status", "==", "active")
+                .get();
+
+            let credited = false;
+
+            for (const docSnap of snap.docs) {
+                const inv = docSnap.data();
+                const expiryDate = inv.expiryDate && inv.expiryDate.toDate
+                    ? inv.expiryDate.toDate()
+                    : new Date(inv.expiryDate);
+
+                if (now >= expiryDate) {
+                    try {
+                        const batch = db.batch();
+                        batch.update(docSnap.ref, { status: 'completed' });
+
+                        const userRef = db.collection("users").doc(auth.currentUser.uid);
+                        batch.update(userRef, {
+                            "withdrawalWallet": firebase.firestore.FieldValue.increment(inv.expectedReturn)
+                        });
+
+                        await batch.commit();
+                        credited = true;
+                    } catch (err) {
+                        console.error("ROI credit error:", err);
+                    }
+                }
+            }
+
+            if (credited) setTimeout(() => loadUserAndRenderProducts(), 800);
+        }
+
+        // =========================================================
+        // 14. AUTH ENTRY
+        // =========================================================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await checkMaturedInvestments();
+                await loadUserAndRenderProducts();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // =========================================================
+        // 15. SLIDER
+        // =========================================================
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            dots.forEach(d => d.classList.remove('active'));
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+        }
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+        setInterval(nextSlide, 3000);
+
+        // =========================================================
+        // 16. WELCOME MODAL — EVERY LOAD (Option C)
+        // =========================================================
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const modal = document.getElementById('welcomeModal');
+                if (modal) modal.classList.add('active');
+            }, 400);
+        });
+        function closeWelcomeModal() {
+            document.getElementById('welcomeModal').classList.remove('active');
+        }
+
+        // =========================================================
+        // 17. VIP ACCESS
+        // =========================================================
+        async function checkVIPAccess() {
+            if (!auth.currentUser) return showToast("Please log in.");
+
+            const snap = await db.collection("investments")
+                .where("userId", "==", auth.currentUser.uid)
+                .where("status", "==", "active")
+                .limit(1)
+                .get();
+
+            if (!snap.empty) {
+                window.open('https://t.me/your_vip_telegram_link', '_blank');
+            } else {
+                showToast("Access Denied. You need an active investment to join the VIP Community.");
+            }
+        }
+
+        // =========================================================
+        // 18. INIT TABS
+        // =========================================================
+        setupTabs();
+    </script>
+</body>
+</html>
