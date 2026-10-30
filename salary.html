@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Daily Salary</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #eef2ff;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --border-color: #d1d9f0;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .top-header {
+            background: var(--primary-blue);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            margin-right: 20px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        /* --- CONTENT --- */
+        .content-section {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* --- MAIN SALARY CARD --- */
+        .salary-main-card {
+            background: linear-gradient(135deg, #1d3bba 0%, #3b5bdb 100%);
+            border-radius: 20px;
+            padding: 25px 20px;
+            color: white;
+            box-shadow: 0 8px 20px rgba(29, 59, 186, 0.25);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .salary-main-card::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 150px; height: 150px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        .vip-badge {
+            background: rgba(255,255,255,0.2);
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            position: relative; z-index: 1;
+        }
+        
+        .salary-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            position: relative; z-index: 1;
+        }
+        
+        .salary-value {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            position: relative; z-index: 1;
+        }
+        
+        .salary-value span {
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .claim-btn {
+            width: 100%;
+            background: #ffffff;
+            color: var(--primary-blue);
+            border: none;
+            padding: 16px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            position: relative; z-index: 1;
+            transition: 0.2s;
+        }
+        .claim-btn:active { transform: scale(0.97); }
+        .claim-btn:disabled {
+            background: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.7);
+            cursor: not-allowed;
+        }
+
+        /* --- HISTORY LIST --- */
+        .history-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .history-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .history-item:last-child { border-bottom: none; }
+        
+        .h-left { display: flex; flex-direction: column; }
+        .h-title { font-size: 14px; font-weight: 600; color: var(--text-dark); }
+        .h-date { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+        
+        .h-amount { font-size: 15px; font-weight: 700; color: var(--success); }
+        
+        .no-history {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 13px;
+            padding: 20px 0;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+
+        /* --- TOAST --- */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOP HEADER ============ -->
+    <div class="top-header">
+        <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        <div class="header-title">Daily Salary</div>
+    </div>
+
+    <!-- ============ CONTENT ============ -->
+    <div class="content-section">
+        
+        <!-- MAIN SALARY CARD -->
+        <div class="salary-main-card">
+            <div class="vip-badge" id="vipBadge">VIP0</div>
+            <div class="salary-title">Your Daily Salary</div>
+            <div class="salary-value">₦<span id="salaryAmount">0</span> <span>/day</span></div>
+            
+            <button class="claim-btn" id="claimBtn" onclick="claimSalary()">Claim Salary</button>
+        </div>
+
+        <!-- HISTORY CARD -->
+        <div class="history-card">
+            <div class="history-title">Salary History</div>
+            <div id="historyList">
+                <div class="no-history">Loading history...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============ BOTTOM NAVIGATION ============ -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <!-- ============ FIREBASE SDKs ============ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. VIP CONFIGURATION
+        const VIP_LEVELS = [
+            { level: 0, name: "VIP0", members: 0, personal: 0, team: 0, salary: 0 },
+            { level: 1, name: "VIP1", members: 3, personal: 65000, team: 140000, salary: 2000 },
+            { level: 2, name: "VIP2", members: 6, personal: 80000, team: 420000, salary: 3500 },
+            { level: 3, name: "VIP3", members: 12, personal: 150000, team: 900000, salary: 4700 },
+            { level: 4, name: "VIP4", members: 26, personal: 325000, team: 1950000, salary: 7000 },
+            { level: 5, name: "VIP5", members: 40, personal: 515000, team: 5900000, salary: 10800 },
+            { level: 6, name: "VIP6", members: 60, personal: 750000, team: 32500000, salary: 32280 },
+            { level: 7, name: "VIP7", members: 100, personal: 960000, team: 147000000, salary: 78000 },
+            { level: 8, name: "VIP8", members: 150, personal: 1920000, team: 450000000, salary: 134500 },
+            { level: 9, name: "VIP9", members: 220, personal: 3000000, team: 900000000, salary: 282450 },
+            { level: 10, name: "VIP10", members: 300, personal: 5200000, team: 1500000000, salary: 800000 }
+        ];
+
+        let currentUserData = null;
+        let currentVip = VIP_LEVELS[0];
+        let myReferralCode = "";
+        let myPersonalRecharge = 0;
+        let myLevelACount = 0;
+        let myLevelARecharge = 0;
+
+        // 3. HELPERS
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        function getTodayString() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        // 4. LOAD & CALCULATE
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // Fetch User
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists) {
+                    currentUserData = doc.data();
+                    myReferralCode = currentUserData.myReferralCode || "";
+                    myPersonalRecharge = currentUserData.totalInvested || 0;
+                }
+
+                // Fetch Level A Downline
+                if (myReferralCode) {
+                    const snap = await db.collection("users").where("referredBy", "==", myReferralCode).get();
+                    myLevelACount = snap.size;
+                    snap.forEach(d => myLevelARecharge += (d.data().totalInvested || 0));
+                }
+
+                calculateVipAndSalary();
+                checkClaimStatus();
+                loadHistory();
+
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 5. CALCULATE VIP
+        function calculateVipAndSalary() {
+            // Find highest VIP
+            for (let i = VIP_LEVELS.length - 1; i >= 0; i--) {
+                const v = VIP_LEVELS[i];
+                if (myLevelACount >= v.members && myPersonalRecharge >= v.personal && myLevelARecharge >= v.team) {
+                    currentVip = v;
+                    break;
+                }
+            }
+
+            // Update UI
+            document.getElementById('vipBadge').innerText = currentVip.name;
+            document.getElementById('salaryAmount').innerText = currentVip.salary.toLocaleString();
+        }
+
+        // 6. CHECK IF ALREADY CLAIMED TODAY
+        function checkClaimStatus() {
+            const btn = document.getElementById('claimBtn');
+            const lastClaim = currentUserData.lastSalaryClaim || null;
+            const today = getTodayString();
+
+            if (currentVip.level === 0) {
+                btn.disabled = true;
+                btn.innerText = "Not Eligible (Upgrade VIP)";
+                btn.style.background = "rgba(255,255,255,0.2)";
+            } else if (lastClaim === today) {
+                btn.disabled = true;
+                btn.innerText = "Claimed Today ✅";
+                btn.style.background = "rgba(255,255,255,0.2)";
+            } else {
+                btn.disabled = false;
+                btn.innerText = `Claim ₦${currentVip.salary.toLocaleString()}`;
+            }
+        }
+
+        // 7. CLAIM SALARY
+        async function claimSalary() {
+            if (currentVip.level === 0) return showToast("You need to upgrade to VIP1 first.", true);
+            
+            const btn = document.getElementById('claimBtn');
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                const userRef = db.collection("users").doc(auth.currentUser.uid);
+                const amount = currentVip.salary;
+                
+                // ATOMIC TRANSACTION
+                const batch = db.batch();
+                
+                // Add to Withdrawal Wallet
+                batch.update(userRef, {
+                    "withdrawalWallet": firebase.firestore.FieldValue.increment(amount),
+                    "lastSalaryClaim": getTodayString()
+                });
+
+                // Log in transactions (for balance record)
+                const transactionRef = db.collection("transactions").doc();
+                batch.set(transactionRef, {
+                    userId: auth.currentUser.uid,
+                    type: "income",
+                    amount: amount,
+                    status: "success",
+                    description: `${currentVip.name} Daily Salary`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await batch.commit();
+
+                showToast(`₦${amount.toLocaleString()} salary credited successfully!`, true);
+                
+                // Refresh UI
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+
+            } catch (err) {
+                console.error("Claim error:", err);
+                showToast("Failed to claim salary. Try again.", true);
+                btn.disabled = false;
+                btn.innerText = `Claim ₦${currentVip.salary.toLocaleString()}`;
+            }
+        }
+
+        // 8. LOAD HISTORY
+        async function loadHistory() {
+            const listEl = document.getElementById('historyList');
+            
+            try {
+                const snap = await db.collection("transactions")
+                    .where("userId", "==", auth.currentUser.uid)
+                    .where("type", "==", "income")
+                    .orderBy("timestamp", "desc")
+                    .limit(10) // Show last 10
+                    .get();
+
+                if (snap.empty) {
+                    listEl.innerHTML = `<div class="no-history">No salary claimed yet.</div>`;
+                    return;
+                }
+
+                let html = "";
+                snap.forEach(doc => {
+                    const t = doc.data();
+                    // Only show VIP salary history
+                    if (t.description && t.description.includes("VIP")) {
+                        const date = t.timestamp ? t.timestamp.toDate() : new Date();
+                        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        html += `
+                            <div class="history-item">
+                                <div class="h-left">
+                                    <div class="h-title">${t.description}</div>
+                                    <div class="h-date">${dateStr}</div>
+                                </div>
+                                <div class="h-amount">+₦${(t.amount || 0).toLocaleString()}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (html === "") {
+                    listEl.innerHTML = `<div class="no-history">No salary claimed yet.</div>`;
+                } else {
+                    listEl.innerHTML = html;
+                }
+
+            } catch (err) {
+                console.error("History error:", err);
+                // Fallback if index is missing
+                listEl.innerHTML = `<div class="no-history">Could not load history.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
