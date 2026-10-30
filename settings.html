@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Settings</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #f0f4ff;
+            --card-bg: #e2e8f3;
+            --text-dark: #222;
+            --text-gray: #555;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+        }
+
+        /* --- HEADER --- */
+        .page-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: var(--light-bg);
+        }
+        .back-btn {
+            width: 40px; height: 40px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-right: 15px;
+        }
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* --- SETTINGS LIST --- */
+        .settings-list {
+            padding: 10px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .setting-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .setting-item:active { transform: scale(0.98); }
+
+        .item-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .item-left i {
+            font-size: 20px;
+            color: var(--text-dark);
+            width: 25px;
+            text-align: center;
+        }
+        .item-left span {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        .item-right {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* --- GIFT CODE DROPDOWN --- */
+        .gift-code-box {
+            display: none; /* Hidden by default */
+            background: var(--white);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: -10px; /* Pull it closer to the button above */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #d1d9f0;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gift-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .gift-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        .gift-input:focus { border-color: var(--primary-blue); }
+        .redeem-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- MODALS (Generic) --- */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 15px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .action-modal {
+            background: #ffffff;
+            width: 100%;
+            max-width: 350px;
+            border-radius: 25px;
+            padding: 25px;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .modal-overlay.active .action-modal { transform: translateY(0); }
+
+        .modal-icon {
+            width: 60px; height: 60px;
+            background: #eef2ff;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px;
+            margin: 0 auto 15px auto;
+        }
+        .modal-icon.danger { background: #fee2e2; color: #e74c3c; }
+        
+        .action-modal h3 {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .action-modal p {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        /* Form inside Modals */
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        .modal-input:focus { border-color: var(--primary-blue); }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 15px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-cancel { background: #f1f5f9; color: #475569; }
+        .btn-primary { background: var(--primary-blue); color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+
+        /* --- TOAST --- */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <a href="profile.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        <div class="page-title">Settings</div>
+    </div>
+
+    <!-- SETTINGS LIST -->
+    <div class="settings-list">
+        
+        <!-- 1. Bind Bank Account -->
+        <a href="bind_bank.html" class="setting-item" style="text-decoration: none;">
+            <div class="item-left">
+                <i class="fa-regular fa-id-card"></i>
+                <span>Bind bank account</span>
+            </div>
+            <div class="item-right"><i class="fa-solid fa-chevron-right"></i></div>
+        </a>
+
+        <!-- 2. Login Password -->
+        <div class="setting-item" onclick="openModal('passwordModal')">
+            <div class="item-left">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Login password</span>
+            </div>
+            <div class="item-right"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+
+        <!-- 3. Gift Code -->
+        <div class="setting-item" onclick="toggleGiftCode()">
+            <div class="item-left">
+                <i class="fa-solid fa-gift"></i>
+                <span>Gift code</span>
+            </div>
+            <div class="item-right"><i class="fa-solid fa-chevron-right" id="giftChevron"></i></div>
+        </div>
+        
+        <!-- Gift Code Dropdown Box -->
+        <div class="gift-code-box" id="giftCodeBox">
+            <div class="gift-input-group">
+                <input type="text" class="gift-input" id="giftCodeInput" placeholder="Enter gift code here">
+                <button class="redeem-btn" onclick="redeemGiftCode()">Redeem</button>
+            </div>
+        </div>
+
+        <!-- 4. Messages -->
+        <div class="setting-item" onclick="openModal('messagesModal')">
+            <div class="item-left">
+                <i class="fa-regular fa-envelope"></i>
+                <span>Messages</span>
+            </div>
+            <div class="item-right"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+
+        <!-- 5. About us -->
+        <div class="setting-item" onclick="openModal('aboutModal')">
+            <div class="item-left">
+                <i class="fa-regular fa-building"></i>
+                <span>About us</span>
+            </div>
+            <div class="item-right"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+
+        <!-- 6. Sign out -->
+        <div class="setting-item" onclick="openModal('logoutModal')">
+            <div class="item-left">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Sign out</span>
+            </div>
+            <div class="item-right"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="action-modal">
+            <div class="modal-icon"><i class="fa-solid fa-lock"></i></div>
+            <h3>Change Password</h3>
+            <p>Enter your current password and a new password to update.</p>
+            
+            <input type="password" id="oldPassword" class="modal-input" placeholder="Current Password">
+            <input type="password" id="newPassword" class="modal-input" placeholder="New Password">
+            
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal('passwordModal')">Cancel</button>
+                <button class="btn-primary" onclick="changePassword()">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MESSAGES MODAL -->
+    <div class="modal-overlay" id="messagesModal">
+        <div class="action-modal">
+            <div class="modal-icon"><i class="fa-regular fa-envelope"></i></div>
+            <h3>Security Messages</h3>
+            <p>
+                <strong>1. Protect Your Details:</strong> Never share your login password, fund password, or OTP with anyone. Nexfund staff will never ask for your password.<br><br>
+                <strong>2. Beware of Scammers:</strong> Do not send money to anyone claiming to be an admin outside of our official platform.<br><br>
+                <strong>3. Account Safety:</strong> Ensure you log out from public devices to keep your account secure.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="closeModal('messagesModal')">I Understand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABOUT US MODAL -->
+    <div class="modal-overlay" id="aboutModal">
+        <div class="action-modal">
+            <div class="modal-icon"><i class="fa-regular fa-building"></i></div>
+            <h3>About Nexfund</h3>
+            <p>
+                Nexfund is a premier digital asset management platform designed to help you grow your wealth securely. We provide smooth, reliable, and transparent earning opportunities through our diverse product packages.<br><br>
+                Our mission is to make wealth creation accessible to everyone, backed by a secure infrastructure and dedicated support team.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn-primary" onclick="closeModal('aboutModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIGN OUT MODAL -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="action-modal">
+            <div class="modal-icon danger"><i class="fa-solid fa-power-off"></i></div>
+            <h3>Sign Out?</h3>
+            <p style="text-align: center;">Are you sure you want to log out of your account?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal('logoutModal')">Cancel</button>
+                <button class="btn-danger" onclick="confirmLogout()">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">Message</div>
+
+    <!-- FIREBASE SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. HELPERS
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // 3. GIFT CODE LOGIC
+        function toggleGiftCode() {
+            const box = document.getElementById('giftCodeBox');
+            const chevron = document.getElementById('giftChevron');
+            
+            if (box.style.display === 'block') {
+                box.style.display = 'none';
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                box.style.display = 'block';
+                chevron.style.transform = 'rotate(90deg)';
+            }
+        }
+
+        async function redeemGiftCode() {
+            const code = document.getElementById('giftCodeInput').value.trim();
+            if (!code) return showToast("Please enter a gift code.", true);
+
+            try {
+                // Look up the code in the 'gift_codes' collection
+                const codeRef = db.collection("gift_codes").doc(code);
+                const codeSnap = await codeRef.get();
+
+                if (!codeSnap.exists) {
+                    return showToast("Invalid gift code.", true);
+                }
+
+                const codeData = codeSnap.data();
+
+                if (codeData.isUsed) {
+                    return showToast("This gift code has already been used.", true);
+                }
+
+                // Example: Give them 1000 Naira in withdrawal wallet
+                const rewardAmount = codeData.amount || 0;
+
+                // Use a batch to update user balance and mark code as used
+                const batch = db.batch();
+                
+                const userRef = db.collection("users").doc(auth.currentUser.uid);
+                batch.update(userRef, {
+                    "withdrawalWallet": firebase.firestore.FieldValue.increment(rewardAmount)
+                });
+
+                batch.update(codeRef, {
+                    isUsed: true,
+                    usedBy: auth.currentUser.uid,
+                    usedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await batch.commit();
+                
+                showToast(`Success! ₦${rewardAmount} added to your wallet.`);
+                document.getElementById('giftCodeInput').value = "";
+                toggleGiftCode();
+
+            } catch (err) {
+                console.error("Gift code error:", err);
+                showToast("Failed to redeem code.", true);
+            }
+        }
+
+        // 4. CHANGE PASSWORD LOGIC
+        async function changePassword() {
+            const oldPass = document.getElementById('oldPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+
+            if (!oldPass || !newPass) return showToast("Please fill both fields.", true);
+            if (newPass.length < 6) return showToast("New password must be at least 6 characters.", true);
+
+            const user = auth.currentUser;
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPass);
+
+            try {
+                // Re-authenticate first (Security requirement by Firebase)
+                await user.reauthenticateWithCredential(credential);
+                
+                // Update password
+                await user.updatePassword(newPass);
+                
+                showToast("Password updated successfully!");
+                closeModal('passwordModal');
+                document.getElementById('oldPassword').value = "";
+                document.getElementById('newPassword').value = "";
+
+            } catch (error) {
+                console.error("Password update error:", error);
+                if (error.code === 'auth/wrong-password') {
+                    showToast("Current password is incorrect.", true);
+                } else {
+                    showToast("Failed to update password.", true);
+                }
+            }
+        }
+
+        // 5. LOGOUT LOGIC
+        async function confirmLogout() {
+            try {
+                await auth.signOut();
+                window.location.href = "login.html";
+            } catch (error) {
+                showToast("Error signing out.", true);
+            }
+        }
+    </script>
+</body>
+</html>
