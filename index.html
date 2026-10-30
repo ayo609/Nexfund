@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Sign Up</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Eye Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- CSS STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Prevents body scroll if modal is active */
+            overflow: hidden; 
+        }
+
+        .main-container {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow-y: auto; /* Allows scrolling on small screens */
+        }
+
+        .signup-card {
+            background: rgba(244, 245, 249, 0.96);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            margin: auto;
+        }
+
+        /* Header */
+        .header-section { margin-bottom: 20px; }
+        .logo-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .logo-img { width: 35px; height: 35px; object-fit: contain; }
+        .brand-name { font-size: 18px; font-weight: 600; color: #1a1a1a; font-style: italic; }
+        .title { font-family: 'Merriweather', serif; color: #1d3bba; font-size: 32px; font-weight: 700; letter-spacing: 0.5px; }
+
+        /* Form Groups */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-family: 'Merriweather', serif; font-size: 14px; color: #333; margin-bottom: 5px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; background: #ffffff; border-radius: 20px; padding: 0 15px; height: 48px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .phone-wrapper { padding-left: 0; }
+        .country-code { color: #00a896; font-weight: 600; font-size: 14px; padding: 0 15px; border-right: 1px solid #eee; margin-right: 10px; }
+        .input-wrapper input { width: 100%; border: none; outline: none; background: transparent; font-size: 14px; color: #333; }
+        .input-wrapper input::placeholder { color: #a0a0a0; }
+        .toggle-password { position: absolute; right: 15px; color: #1d3bba; cursor: pointer; font-size: 16px; }
+
+        /* Button */
+        .signup-btn { width: 100%; background: #1d3bba; color: white; border: none; padding: 15px; border-radius: 25px; font-size: 16px; font-weight: 600; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+        .signup-btn:hover { background: #142ca3; }
+        .signup-btn:disabled { background: #7a8ad1; cursor: not-allowed; }
+
+        /* Footer */
+        .footer-text { text-align: center; margin-top: 20px; font-size: 13px; color: #333; }
+        .signin-link { color: #1d3bba; text-decoration: none; font-weight: 500; }
+
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        .modal-icon.success { color: #00a896; }
+        .modal-icon.error { color: #e74c3c; }
+
+        .modal-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+
+        .modal-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal-btn {
+            width: 100%;
+            background: #1d3bba;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 15px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .modal-btn:hover { background: #142ca3; }
+
+        @media (max-width: 400px) {
+            .signup-card { padding: 20px; }
+            .title { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="signup-card">
+            
+            <!-- Header Section -->
+            <div class="header-section">
+                <div class="logo-container">
+                    <img src="logo.png" alt="Nexfund Logo" class="logo-img">
+                    <span class="brand-name">Nexfund</span>
+                </div>
+                <h1 class="title">Sign Up</h1>
+            </div>
+
+            <!-- Form Section -->
+            <form id="signupForm">
+                
+                <!-- Phone Number -->
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <div class="input-wrapper phone-wrapper">
+                        <span class="country-code">+234</span>
+                        <input type="tel" id="phone" placeholder="Input phone number" required>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="Input password" required>
+                        <i class="fa-regular fa-eye-slash toggle-password" onclick="togglePassword('password', this)"></i>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="input-group">
+                    <label>Password Confirm</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="confirmPassword" placeholder="Input confirm password" required>
+                        <i class="fa-regular fa-eye-slash toggle-password" onclick="togglePassword('confirmPassword', this)"></i>
+                    </div>
+                </div>
+
+                <!-- Fund Password -->
+                <div class="input-group">
+                    <label>Fund Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="fundPassword" placeholder="Fund Password" required>
+                        <i class="fa-regular fa-eye-slash toggle-password" onclick="togglePassword('fundPassword', this)"></i>
+                    </div>
+                </div>
+
+                <!-- Invitation Code -->
+                <div class="input-group">
+                    <label>Invitation Code</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="invitationCode" value="A61704" readonly>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="signup-btn">Sign Up</button>
+                
+                <div class="footer-text">
+                    Already have an account? <a href="login.html" class="signin-link">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Modal Component -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box">
+            <i id="modalIcon" class="modal-icon"></i>
+            <h2 class="modal-title" id="modalTitle">Title</h2>
+            <p class="modal-message" id="modalMessage">Message goes here.</p>
+            <button class="modal-btn" id="modalBtn">Okay</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (v9 Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        // 1. Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. Toggle Password Visibility
+        function togglePassword(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                iconElement.classList.remove("fa-eye-slash");
+                iconElement.classList.add("fa-eye");
+            } else {
+                input.type = "password";
+                iconElement.classList.remove("fa-eye");
+                iconElement.classList.add("fa-eye-slash");
+            }
+        }
+
+        // 3. Modal Logic
+        let redirectAfterModal = false;
+        const modal = document.getElementById('customModal');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalBtn = document.getElementById('modalBtn');
+
+        function showModal(type, title, message, shouldRedirect = false) {
+            if (type === 'success') {
+                modalIcon.className = 'modal-icon success fa-solid fa-circle-check';
+            } else {
+                modalIcon.className = 'modal-icon error fa-solid fa-circle-exclamation';
+            }
+            
+            modalTitle.innerText = title;
+            modalMessage.innerText = message;
+            redirectAfterModal = shouldRedirect;
+            modal.classList.add('active');
+        }
+
+        modalBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            if (redirectAfterModal) {
+                window.location.href = "login.html"; // Redirect to Login Page
+            }
+        });
+
+        // 4. Handle Form Submission
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const fundPassword = document.getElementById('fundPassword').value;
+            const invitationCode = document.getElementById('invitationCode').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Basic Validation
+            if (password !== confirmPassword) {
+                showModal('error', 'Password Mismatch', 'The passwords you entered do not match.');
+                return;
+            }
+            if (password.length < 6) {
+                showModal('error', 'Weak Password', 'Password must be at least 6 characters long.');
+                return;
+            }
+            if (fundPassword.length < 4) {
+                showModal('error', 'Weak Fund Password', 'Fund password must be at least 4 characters long.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Creating Account...";
+
+            // Format phone for Firebase Auth (Firebase requires email format)
+            // We use a pseudo-email based on the phone number
+            let formattedPhone = phone;
+            if (!phone.startsWith('+')) {
+                formattedPhone = `+234${phone}`;
+            }
+            const authEmail = `${formattedPhone.replace(/\s+/g, '')}@nexfund.com`;
+
+            try {
+                // 1. Create User in Firebase Authentication
+                const userCredential = await auth.createUserWithEmailAndPassword(authEmail, password);
+                const user = userCredential.user;
+
+                // 2. Save User Data to Firestore Database (Including Fund Password)
+                await db.collection("users").doc(user.uid).set({
+                    phoneNumber: formattedPhone,
+                    fundPassword: fundPassword, 
+                    invitationCode: invitationCode,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    balance: 0 // Default balance
+                });
+
+                // Show Success Modal and set redirect to true
+                showModal('success', 'Account Created!', 'Your Nexfund account has been created successfully. You will be redirected to login.', true);
+
+            } catch (error) {
+                console.error("Error during sign up:", error);
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    showModal('error', 'Account Exists', 'This phone number is already registered. Please sign in.');
+                } else if (error.code === 'auth/weak-password') {
+                    showModal('error', 'Weak Password', 'Firebase rejected the password as too weak.');
+                } else if (error.code === 'auth/invalid-email') {
+                    showModal('error', 'Invalid Phone', 'Please check the phone number format.');
+                } else {
+                    showModal('error', 'Registration Failed', error.message);
+                }
+                
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Sign Up";
+            }
+        });
+    </script>
+</body>
+</html>
