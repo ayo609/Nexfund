@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Bank Account</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #eef2ff;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #777;
+            --input-bg: #f4f6fc;
+            --border-color: #d1d9f0;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .top-header {
+            background: var(--primary-blue);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            margin-right: 20px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        /* --- MAIN CARD --- */
+        .content-section {
+            padding: 25px 20px;
+        }
+
+        .bank-card {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 25px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+        }
+        .card-title i {
+            color: var(--primary-blue);
+            font-size: 20px;
+        }
+
+        /* --- TABS --- */
+        .tabs-container {
+            background: var(--input-bg);
+            border-radius: 25px;
+            display: flex;
+            padding: 5px;
+            margin-bottom: 25px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-gray);
+            border-radius: 20px;
+            cursor: default;
+        }
+        .tab.active {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 10px rgba(29, 59, 186, 0.2);
+        }
+
+        /* --- FORM INPUTS --- */
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-wrapper select,
+        .input-wrapper input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            background: var(--input-bg);
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+            appearance: none;
+        }
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
+            border-color: var(--primary-blue);
+            background: #ffffff;
+        }
+        .input-wrapper input::placeholder {
+            color: #aaa;
+        }
+
+        /* Custom Dropdown Arrow */
+        .select-arrow {
+            position: absolute;
+            right: 16px;
+            color: #aaa;
+            pointer-events: none;
+        }
+
+        /* --- SUBMIT BUTTON --- */
+        .submit-btn {
+            width: 100%;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(29, 59, 186, 0.2);
+            transition: 0.2s;
+        }
+        .submit-btn:active { transform: scale(0.97); }
+        .submit-btn:disabled { background: #7a8ad1; cursor: not-allowed; }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+
+        /* --- TOAST --- */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOP HEADER ============ -->
+    <div class="top-header">
+        <a href="settings.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        <div class="header-title">Bank account</div>
+    </div>
+
+    <!-- ============ CONTENT ============ -->
+    <div class="content-section">
+        <div class="bank-card">
+            
+            <div class="card-title">
+                <i class="fa-solid fa-building-columns"></i>
+                Bind your bank account
+            </div>
+
+            <!-- Tabs (USDT removed) -->
+            <div class="tabs-container">
+                <div class="tab active">Bank (Naira)</div>
+            </div>
+
+            <form id="bankForm">
+                <!-- Select Bank -->
+                <div class="input-group">
+                    <label>Select bank</label>
+                    <div class="input-wrapper">
+                        <select id="bankName" required>
+                            <option value="" disabled selected>Choose your bank</option>
+                            <option value="Access Bank">Access Bank</option>
+                            <option value="Citibank">Citibank</option>
+                            <option value="Ecobank">Ecobank</option>
+                            <option value="Fidelity Bank">Fidelity Bank</option>
+                            <option value="First Bank">First Bank</option>
+                            <option value="FCMB">First City Monument Bank (FCMB)</option>
+                            <option value="GTBank">Guaranty Trust Bank (GTB)</option>
+                            <option value="Heritage Bank">Heritage Bank</option>
+                            <option value="Kuda">Kuda Bank</option>
+                            <option value="Keystone Bank">Keystone Bank</option>
+                            <option value="Moniepoint">Moniepoint</option>
+                            <option value="Opay">OPay</option>
+                            <option value="Palmpay">PalmPay</option>
+                            <option value="Polaris Bank">Polaris Bank</option>
+                            <option value="Providus Bank">Providus Bank</option>
+                            <option value="Stanbic IBTC">Stanbic IBTC</option>
+                            <option value="Standard Chartered">Standard Chartered</option>
+                            <option value="Sterling Bank">Sterling Bank</option>
+                            <option value="UBA">United Bank for Africa (UBA)</option>
+                            <option value="Union Bank">Union Bank</option>
+                            <option value="Unity Bank">Unity Bank</option>
+                            <option value="Wema Bank">Wema Bank</option>
+                            <option value="Zenith Bank">Zenith Bank</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down select-arrow"></i>
+                    </div>
+                </div>
+
+                <!-- Account Number -->
+                <div class="input-group">
+                    <label>Account number</label>
+                    <div class="input-wrapper">
+                        <input type="tel" id="accountNumber" placeholder="Enter 10-digit account number" maxlength="10" minlength="10" required>
+                    </div>
+                </div>
+
+                <!-- Account Name (Now Editable) -->
+                <div class="input-group">
+                    <label>Account name</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="accountName" placeholder="Enter your account name" required>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="submit-btn">Bind bank account</button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- ============ BOTTOM NAVIGATION ============ -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <!-- ============ TOAST ============ -->
+    <div class="toast" id="toast">Message</div>
+
+    <!-- ============ FIREBASE SDKs ============ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. TOAST HELPER
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // 3. CHECK EXISTING BANK ACCOUNT ON LOAD
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    // If they already have a bank bound, pre-fill the form
+                    if (data.bankDetails && data.bankDetails.accountNumber) {
+                        document.getElementById('bankName').value = data.bankDetails.bankName || "";
+                        document.getElementById('accountNumber').value = data.bankDetails.accountNumber || "";
+                        document.getElementById('accountName').value = data.bankDetails.accountName || "";
+                        
+                        document.getElementById('submitBtn').innerText = "Update bank account";
+                    }
+                }
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 4. FORM SUBMISSION
+        document.getElementById('bankForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const bankName = document.getElementById('bankName').value;
+            const accountNumber = document.getElementById('accountNumber').value;
+            const accountName = document.getElementById('accountName').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!bankName) return showToast("Please select a bank.", true);
+            if (accountNumber.length !== 10) return showToast("Account number must be 10 digits.", true);
+            if (accountName.trim().length < 3) return showToast("Please enter a valid account name.", true);
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving...";
+
+            try {
+                const user = auth.currentUser;
+                
+                // Save the bank details nested inside the user's document
+                await db.collection("users").doc(user.uid).update({
+                    bankDetails: {
+                        bankName: bankName,
+                        accountNumber: accountNumber,
+                        accountName: accountName,
+                        status: "pending", // Crucial for admin manual approval
+                        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                });
+
+                showToast("Bank account submitted successfully!");
+                
+                setTimeout(() => {
+                    window.location.href = "settings.html"; // Return to settings
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error saving bank:", error);
+                showToast("Failed to save bank details. Try again.", true);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Bind bank account";
+            }
+        });
+    </script>
+</body>
+</html>
