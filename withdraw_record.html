@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Withdrawal History</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #f0f4ff;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #777;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --border-dashed: #d1d9f0;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .top-header {
+            background: var(--primary-blue);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            margin-right: 20px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        /* --- CONTENT --- */
+        .content-section {
+            padding: 25px 15px;
+        }
+
+        /* --- EMPTY STATE BOX --- */
+        .empty-dashed-box {
+            background: var(--card-bg);
+            border: 1.5px dashed var(--border-dashed);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .empty-dashed-box p {
+            font-size: 15px;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
+
+        /* --- REQUEST BUTTON --- */
+        .request-btn {
+            display: block;
+            width: 100%;
+            background: var(--primary-blue);
+            color: white;
+            text-align: center;
+            padding: 16px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(29, 59, 186, 0.2);
+            margin-bottom: 25px;
+            transition: 0.2s;
+        }
+        .request-btn:active { transform: scale(0.97); }
+
+        /* --- WITHDRAWAL CARDS --- */
+        .withdrawal-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #f0f0f0;
+        }
+        .w-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .w-amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .w-status {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: capitalize;
+        }
+        .status-pending { background: #fff3cd; color: var(--warning); }
+        .status-success { background: #d1f2eb; color: var(--success); }
+        .status-rejected { background: #fadbd8; color: var(--danger); }
+
+        .w-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .w-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        .w-label { color: var(--text-gray); }
+        .w-value { font-weight: 600; color: var(--text-dark); }
+
+        /* Loading State */
+        .loading-spinner {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 14px;
+            padding: 20px;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOP HEADER ============ -->
+    <div class="top-header">
+        <a href="profile.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        <div class="header-title">Withdrawal history</div>
+    </div>
+
+    <div class="content-section">
+        
+        <!-- EMPTY STATE (Hidden if history exists) -->
+        <div id="emptyStateContainer">
+            <div class="empty-dashed-box">
+                <p>You have not requested a payout yet.</p>
+            </div>
+        </div>
+
+        <!-- REQUEST BUTTON -->
+        <a href="withdraw.html" class="request-btn">Request a withdrawal</a>
+
+        <!-- LIST OF WITHDRAWALS -->
+        <div id="withdrawalList">
+            <div class="loading-spinner">Loading...</div>
+        </div>
+
+    </div>
+
+    <!-- ============ BOTTOM NAVIGATION ============ -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <!-- ============ FIREBASE SDKs ============ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. AUTH STATE & FETCH
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                fetchWithdrawalHistory(user.uid);
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 3. FETCH WITHDRAWALS
+        async function fetchWithdrawalHistory(uid) {
+            const listContainer = document.getElementById('withdrawalList');
+            const emptyState = document.getElementById('emptyStateContainer');
+
+            try {
+                // Look into 'transactions' collection for type 'withdraw'
+                const snap = await db.collection("transactions")
+                    .where("userId", "==", uid)
+                    .where("type", "==", "withdraw")
+                    .orderBy("timestamp", "desc")
+                    .get();
+
+                // If empty, keep the empty state visible and clear loading spinner
+                if (snap.empty) {
+                    emptyState.style.display = "block";
+                    listContainer.innerHTML = ""; 
+                    return;
+                }
+
+                // If data exists, hide the empty state box
+                emptyState.style.display = "none";
+                listContainer.innerHTML = "";
+
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // Date formatting
+                    const date = data.timestamp ? data.timestamp.toDate() : new Date();
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // Status formatting
+                    const status = (data.status || 'pending').toLowerCase();
+                    let statusClass = 'status-pending';
+                    if (status === 'success' || status === 'approved') statusClass = 'status-success';
+                    if (status === 'rejected' || status === 'failed') statusClass = 'status-rejected';
+
+                    // Method formatting
+                    const method = data.method || "Bank Transfer";
+                    const accountInfo = data.accountNumber || "N/A";
+
+                    listContainer.innerHTML += `
+                        <div class="withdrawal-card">
+                            <div class="w-header">
+                                <div class="w-amount">₦${(data.amount || 0).toLocaleString()}</div>
+                                <div class="w-status ${statusClass}">${status}</div>
+                            </div>
+                            <div class="w-details">
+                                <div class="w-row">
+                                    <span class="w-label">Date Requested</span>
+                                    <span class="w-value">${dateStr}</span>
+                                </div>
+                                <div class="w-row">
+                                    <span class="w-label">Method</span>
+                                    <span class="w-value">${method}</span>
+                                </div>
+                                <div class="w-row">
+                                    <span class="w-label">Account Details</span>
+                                    <span class="w-value">${accountInfo}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Error fetching withdrawals:", err);
+                if (err.message.includes("index")) {
+                    listContainer.innerHTML = `<div class="loading-spinner">Database index required. Check console.</div>`;
+                } else {
+                    listContainer.innerHTML = `<div class="loading-spinner">Failed to load history.</div>`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
