@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - VIP Commission</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #0f2563;
+            --light-bg: #eef2ff;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --danger: #e74c3c;
+            --success: #00a896;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .top-header {
+            background: var(--primary-blue);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            margin-right: 20px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        /* --- CONTENT --- */
+        .content-section {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* --- CARDS --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+
+        /* --- CURRENT LEVEL CARD --- */
+        .current-level-label {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+        .vip-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        .vip-title i {
+            color: #00bcd4; /* Teal Crown */
+            font-size: 24px;
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .info-row i { color: var(--primary-blue); font-size: 16px; }
+
+        /* Dark Progress Box */
+        .progress-box {
+            background: var(--dark-blue);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            margin-top: 15px;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .progress-bar-bg {
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #ffffff;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .progress-footer {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* --- NEXT LEVEL CARD --- */
+        .next-level-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        .req-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .req-box {
+            background: #f4f6fc;
+            border-radius: 15px;
+            padding: 15px;
+            position: relative;
+        }
+        .req-box-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            width: 80%;
+        }
+        .req-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: white;
+            font-size: 10px;
+        }
+        .req-status.fail { background: var(--danger); }
+        .req-status.pass { background: var(--success); }
+        
+        .req-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-gray);
+        }
+        .req-val.pass { color: var(--success); }
+
+        /* --- DAILY SALARY CARD --- */
+        .salary-card {
+            background: var(--primary-blue);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(29, 59, 186, 0.2);
+        }
+        .salary-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .salary-amount {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .salary-amount span {
+            font-size: 14px;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        /* --- REQUIREMENTS LIST CARD --- */
+        .req-list-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        .req-list p {
+            font-size: 12px;
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        .req-list p:last-child {
+            margin-bottom: 0;
+        }
+        .req-list strong {
+            color: var(--primary-blue);
+        }
+        .req-note {
+            font-size: 11px;
+            color: var(--text-gray);
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOP HEADER ============ -->
+    <div class="top-header">
+        <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        <div class="header-title">VIP commission</div>
+    </div>
+
+    <!-- ============ CONTENT ============ -->
+    <div class="content-section">
+        
+        <!-- CURRENT LEVEL CARD -->
+        <div class="card">
+            <div class="current-level-label">Current Level</div>
+            <div class="vip-title">
+                <i class="fa-solid fa-crown"></i> 
+                <span id="currentVipName">VIP0</span>
+            </div>
+            
+            <div class="info-row">
+                <i class="fa-solid fa-database"></i>
+                <span>Subordinate Recharge Amount: <strong id="subRechargeDisplay">₦0</strong></span>
+            </div>
+            
+            <div class="info-row">
+                <i class="fa-solid fa-users"></i>
+                <span>Upgrade to <strong id="nextVipName">VIP1</strong> Progress</span>
+            </div>
+
+            <div class="progress-box">
+                <div class="progress-header">
+                    <span>New Members</span>
+                    <span id="teamProgressText">0/3</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="teamProgressBar"></div>
+                </div>
+                <div class="progress-footer" id="teamProgressFooter">
+                    Get 3 valid subordinates to reach VIP1
+                </div>
+            </div>
+        </div>
+
+        <!-- NEXT LEVEL CARD -->
+        <div class="card">
+            <div class="next-level-title">Next Level: <span id="nextLevelTitle">VIP1</span></div>
+            
+            <div class="req-grid">
+                <!-- Personal Recharge -->
+                <div class="req-box">
+                    <div class="req-status fail" id="statusPersonal"><i class="fa-solid fa-xmark"></i></div>
+                    <div class="req-box-title">Personal Recharge</div>
+                    <div class="req-val" id="valPersonal">₦0/₦65,000</div>
+                </div>
+
+                <!-- Team Members -->
+                <div class="req-box">
+                    <div class="req-status fail" id="statusTeam"><i class="fa-solid fa-xmark"></i></div>
+                    <div class="req-box-title">Team Members</div>
+                    <div class="req-val" id="valTeam">0/3</div>
+                </div>
+
+                <!-- Subordinate Recharge -->
+                <div class="req-box">
+                    <div class="req-status fail" id="statusSub"><i class="fa-solid fa-xmark"></i></div>
+                    <div class="req-box-title">Subordinate Recharge Amount</div>
+                    <div class="req-val" id="valSub">₦0/₦140,000</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DAILY SALARY CARD -->
+        <div class="salary-card">
+            <div class="salary-label">Daily Salary (<span id="salaryVipName">VIP0</span>)</div>
+            <div class="salary-amount">₦<span id="dailySalaryAmount">0</span> <span>/day</span></div>
+        </div>
+
+        <!-- VIP REQUIREMENTS LIST -->
+        <div class="card">
+            <div class="req-list-title">VIP Level Requirements</div>
+            <div class="req-list">
+                <p><strong>VIP1:</strong> 3 Level A members · ₦65,000 personal recharge · ₦140,000 team recharge → ₦2,000/day</p>
+                <p><strong>VIP2:</strong> 6 Level A members · ₦80,000 personal recharge · ₦420,000 team recharge → ₦3,500/day</p>
+                <p><strong>VIP3:</strong> 12 Level A members · ₦150,000 personal recharge · ₦900,000 team recharge → ₦4,700/day</p>
+                <p><strong>VIP4:</strong> 26 Level A members · ₦325,000 personal recharge · ₦1,950,000 team recharge → ₦7,000/day</p>
+                <p><strong>VIP5:</strong> 40 Level A members · ₦515,000 personal recharge · ₦5,900,000 team recharge → ₦10,800/day</p>
+                <p><strong>VIP6:</strong> 60 Level A members · ₦750,000 personal recharge · ₦32,500,000 team recharge → ₦32,280/day</p>
+                <p><strong>VIP7:</strong> 100 Level A members · ₦960,000 personal recharge · ₦147,000,000 team recharge → ₦78,000/day</p>
+                <p><strong>VIP8:</strong> 150 Level A members · ₦1,920,000 personal recharge · ₦450,000,000 team recharge → ₦134,500/day</p>
+                <p><strong>VIP9:</strong> 220 Level A members · ₦3,000,000 personal recharge · ₦900,000,000 team recharge → ₦282,450/day</p>
+                <p><strong>VIP10:</strong> 300 Level A members · ₦5,200,000 personal recharge · ₦1,500,000,000 team recharge → ₦800,000/day</p>
+            </div>
+            <div class="req-note">
+                Salaries are reviewed and paid by the company to members who keep their VIP requirements.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============ BOTTOM NAVIGATION ============ -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <!-- ============ FIREBASE SDKs ============ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. VIP DATA CONFIGURATION
+        const VIP_LEVELS = [
+            { level: 0, name: "VIP0", members: 0, personal: 0, team: 0, salary: 0 },
+            { level: 1, name: "VIP1", members: 3, personal: 65000, team: 140000, salary: 2000 },
+            { level: 2, name: "VIP2", members: 6, personal: 80000, team: 420000, salary: 3500 },
+            { level: 3, name: "VIP3", members: 12, personal: 150000, team: 900000, salary: 4700 },
+            { level: 4, name: "VIP4", members: 26, personal: 325000, team: 1950000, salary: 7000 },
+            { level: 5, name: "VIP5", members: 40, personal: 515000, team: 5900000, salary: 10800 },
+            { level: 6, name: "VIP6", members: 60, personal: 750000, team: 32500000, salary: 32280 },
+            { level: 7, name: "VIP7", members: 100, personal: 960000, team: 147000000, salary: 78000 },
+            { level: 8, name: "VIP8", members: 150, personal: 1920000, team: 450000000, salary: 134500 },
+            { level: 9, name: "VIP9", members: 220, personal: 3000000, team: 900000000, salary: 282450 },
+            { level: 10, name: "VIP10", members: 300, personal: 5200000, team: 1500000000, salary: 800000 }
+        ];
+
+        let myReferralCode = "";
+        let myPersonalRecharge = 0;
+        let myLevelACount = 0;
+        let myLevelARecharge = 0;
+
+        // 3. HELPER FORMATTER
+        function formatNaira(amount) {
+            return "₦" + amount.toLocaleString();
+        }
+
+        // 4. LOAD DATA & CALCULATE
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // A. Get My User Data
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                if (userDoc.exists) {
+                    const u = userDoc.data();
+                    myReferralCode = u.myReferralCode || "";
+                    myPersonalRecharge = u.totalInvested || 0; // Assuming totalInvested tracks lifetime recharge
+                }
+
+                // B. Get Level A Downline
+                if (myReferralCode) {
+                    const downlineSnap = await db.collection("users").where("referredBy", "==", myReferralCode).get();
+                    myLevelACount = downlineSnap.size;
+                    
+                    downlineSnap.forEach(doc => {
+                        const d = doc.data();
+                        myLevelARecharge += (d.totalInvested || 0);
+                    });
+                }
+
+                // C. Calculate Current VIP and Next VIP
+                calculateVipStatus();
+
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 5. UPDATE UI BASED ON CALCULATION
+        function calculateVipStatus() {
+            let currentVip = VIP_LEVELS[0];
+            
+            // Find the highest VIP they qualify for
+            for (let i = VIP_LEVELS.length - 1; i >= 0; i--) {
+                const v = VIP_LEVELS[i];
+                if (myLevelACount >= v.members && myPersonalRecharge >= v.personal && myLevelARecharge >= v.team) {
+                    currentVip = v;
+                    break;
+                }
+            }
+
+            const nextVip = VIP_LEVELS[currentVip.level + 1] || null;
+
+            // --- UPDATE CURRENT CARD ---
+            document.getElementById('currentVipName').innerText = currentVip.name;
+            document.getElementById('subRechargeDisplay').innerText = formatNaira(myLevelARecharge);
+            document.getElementById('salaryVipName').innerText = currentVip.name;
+            document.getElementById('dailySalaryAmount').innerText = currentVip.salary.toLocaleString();
+
+            if (nextVip) {
+                document.getElementById('nextVipName').innerText = nextVip.name;
+                document.getElementById('nextLevelTitle').innerText = nextVip.name;
+
+                // Progress Bar logic
+                const membersNeeded = nextVip.members - myLevelACount;
+                const progressPercent = Math.min((myLevelACount / nextVip.members) * 100, 100);
+                
+                document.getElementById('teamProgressText').innerText = `${myLevelACount}/${nextVip.members}`;
+                document.getElementById('teamProgressBar').style.width = `${progressPercent}%`;
+                
+                if (membersNeeded > 0) {
+                    document.getElementById('teamProgressFooter').innerText = `Get ${membersNeeded} valid subordinates to reach ${nextVip.name}`;
+                } else {
+                    document.getElementById('teamProgressFooter').innerText = `Team requirement met!`;
+                }
+
+                // --- UPDATE NEXT LEVEL REQUIREMENTS BOXES ---
+                updateRequirementBox('statusPersonal', 'valPersonal', myPersonalRecharge, nextVip.personal);
+                updateRequirementBox('statusTeam', 'valTeam', myLevelACount, nextVip.members);
+                updateRequirementBox('statusSub', 'valSub', myLevelARecharge, nextVip.team);
+
+            } else {
+                // Already at max level
+                document.getElementById('nextVipName').innerText = "MAX";
+                document.getElementById('nextLevelTitle').innerText = "MAX";
+                document.getElementById('teamProgressText').innerText = "Maxed";
+                document.getElementById('teamProgressBar').style.width = "100%";
+                document.getElementById('teamProgressFooter').innerText = "You have reached the highest VIP level!";
+                
+                updateRequirementBox('statusPersonal', 'valPersonal', 1, 1);
+                updateRequirementBox('statusTeam', 'valTeam', 1, 1);
+                updateRequirementBox('statusSub', 'valSub', 1, 1);
+            }
+        }
+
+        // Helper to update the red X / green check boxes
+        function updateRequirementBox(statusId, valId, current, required) {
+            const statusEl = document.getElementById(statusId);
+            const valEl = document.getElementById(valId);
+            
+            // Format text
+            if (valId === 'valTeam') {
+                valEl.innerText = `${current}/${required}`;
+            } else {
+                valEl.innerText = `${formatNaira(current)}/${formatNaira(required)}`;
+            }
+
+            // Check if pass
+            if (current >= required) {
+                statusEl.className = 'req-status pass';
+                statusEl.innerHTML = '<i class="fa-solid fa-check"></i>';
+                valEl.className = 'req-val pass';
+            } else {
+                statusEl.className = 'req-status fail';
+                statusEl.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                valEl.className = 'req-val';
+            }
+        }
+    </script>
+</body>
+</html>
