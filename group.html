@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Groups</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #e2ebfa; /* Matches the light blue background in your screenshot */
+            --text-dark: #111;
+            --text-gray: #666;
+            --tg-blue: #1d3bba;
+            --vip-teal: #159bb5;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+        }
+
+        /* --- HEADER --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-blue, #1d3bba);
+        }
+        .close-btn {
+            font-size: 28px;
+            color: #111;
+            cursor: pointer;
+            text-decoration: none;
+            line-height: 1;
+        }
+
+        /* --- GROUP CARDS --- */
+        .group-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.03);
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .group-card:active {
+            transform: scale(0.98);
+        }
+
+        .group-icon {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: white;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+        
+        .icon-tg { background: var(--tg-blue); }
+        .icon-vip { background: var(--vip-teal); }
+
+        .group-info {
+            flex: 1;
+        }
+        .group-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+        .group-desc {
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .lock-icon {
+            font-size: 18px;
+            color: #999;
+            margin-left: auto; /* Pushes it to the right */
+        }
+
+        /* --- TOAST --- */
+        .toast { 
+            position: fixed; bottom: 40px; left: 50%; 
+            transform: translateX(-50%) translateY(20px); 
+            background: rgba(231, 76, 60, 0.95); 
+            color: white; padding: 12px 20px; border-radius: 20px; 
+            font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; 
+            z-index: 2000; pointer-events: none; text-align: center; 
+            width: max-content; max-width: 90%; 
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="page-title">Groups</div>
+        <a href="dashboard.html" class="close-btn">&times;</a>
+    </div>
+
+    <!-- TELEGRAM GROUP (Open to all) -->
+    <div class="group-card" onclick="openTelegram()">
+        <div class="group-icon icon-tg">
+            <i class="fa-regular fa-paper-plane"></i>
+        </div>
+        <div class="group-info">
+            <div class="group-name">Telegram Group</div>
+            <div class="group-desc">Open to all members</div>
+        </div>
+    </div>
+
+    <!-- VIP COMMUNITY (Active investors only) -->
+    <div class="group-card" onclick="checkVIPAccess()">
+        <div class="group-icon icon-vip">
+            <i class="fa-solid fa-crown"></i>
+        </div>
+        <div class="group-info">
+            <div class="group-name">VIP Community</div>
+            <div class="group-desc">Active investors only</div>
+        </div>
+        <!-- Lock Icon on the right -->
+        <i class="fa-solid fa-lock lock-icon"></i>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">Message</div>
+
+    <!-- FIREBASE SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Replace this with your actual Telegram link
+        const TELEGRAM_LINK = 'https://t.me/your_telegram_link';
+        const VIP_TELEGRAM_LINK = 'https://t.me/your_vip_telegram_link';
+
+        // 2. TOAST HELPER
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // 3. OPEN PUBLIC TELEGRAM
+        function openTelegram() {
+            window.open(TELEGRAM_LINK, '_blank');
+        }
+
+        // 4. CHECK VIP ACCESS LOGIC
+        async function checkVIPAccess() {
+            if (!auth.currentUser) {
+                return showToast("Please log in first.");
+            }
+
+            // Check for active investment
+            try {
+                const snap = await db.collection("investments")
+                    .where("userId", "==", auth.currentUser.uid)
+                    .where("status", "==", "active")
+                    .limit(1)
+                    .get();
+
+                if (!snap.empty) {
+                    // User has an active product, allow entry
+                    window.open(VIP_TELEGRAM_LINK, '_blank');
+                } else {
+                    // User has no active products
+                    showToast("Access Denied. You need an active investment to join the VIP Community.");
+                }
+            } catch (error) {
+                console.error("Error checking VIP access:", error);
+                showToast("Network error. Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>
