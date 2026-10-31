@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Admin Access</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #0f2563;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 25px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .admin-icon {
+            width: 80px; height: 80px;
+            background: #eef2ff;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 32px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 5px 15px rgba(29, 59, 186, 0.2);
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i.fa-phone, 
+        .input-wrapper i.fa-lock {
+            position: absolute;
+            left: 15px;
+            color: #a0aec0;
+            font-size: 16px;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+            background: #f8fafc;
+            transition: 0.3s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-blue);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(29, 59, 186, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            color: var(--primary-blue);
+            cursor: pointer;
+            font-size: 16px;
+            left: auto !important;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(29, 59, 186, 0.3);
+        }
+
+        .login-btn:hover { background: #142ca3; }
+        .login-btn:disabled { background: #8a9de8; cursor: not-allowed; }
+
+        /* --- TOAST --- */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(231, 76, 60, 0.95); color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        
+        <div class="admin-icon">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        
+        <h1 class="title">Admin Portal</h1>
+        <p class="subtitle">Restricted access for authorized personnel only.</p>
+
+        <form id="adminLoginForm">
+            <!-- Phone Number -->
+            <div class="input-group">
+                <label>Admin Phone Number</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-phone"></i>
+                    <input type="tel" id="adminPhone" placeholder="e.g. 08012345678" required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="input-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="adminPassword" placeholder="Enter password" required>
+                    <i class="fa-regular fa-eye-slash toggle-password" onclick="togglePassword('adminPassword', this)"></i>
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn" class="login-btn">Secure Login</button>
+        </form>
+
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">Message</div>
+
+    <!-- FIREBASE SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. HELPERS
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        function togglePassword(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") {
+                input.type = "text";
+                iconElement.classList.remove("fa-eye-slash");
+                iconElement.classList.add("fa-eye");
+            } else {
+                input.type = "password";
+                iconElement.classList.remove("fa-eye");
+                iconElement.classList.add("fa-eye-slash");
+            }
+        }
+
+        // 3. ADMIN LOGIN LOGIC
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const phone = document.getElementById('adminPhone').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.innerText = "Authenticating...";
+
+            // Format phone exactly how it was saved during signup
+            let formattedPhone = phone;
+            if (!phone.startsWith('+')) {
+                formattedPhone = `+234${phone}`;
+            }
+            // Convert to the hidden email format used in index.html
+            const authEmail = `${formattedPhone.replace(/\s+/g, '')}@nexfund.com`;
+
+            try {
+                // 1. Sign in with Firebase Auth
+                const userCredential = await auth.signInWithEmailAndPassword(authEmail, password);
+                const user = userCredential.user;
+
+                // 2. Check Firestore for Admin role
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    throw new Error("User document not found.");
+                }
+
+                const userData = userDoc.data();
+
+                // Check if they have the correct flags
+                if (userData.role === "admin" && userData.isAdmin === true) {
+                    // Success! Redirect to Admin Dashboard
+                    window.location.href = "admin-dashboard.html";
+                } else {
+                    // Not an admin, kick them out and show error
+                    await auth.signOut();
+                    throw new Error("Access Denied. You do not have admin privileges.");
+                }
+
+            } catch (error) {
+                console.error("Admin Login Error:", error);
+                
+                // User-friendly error messages
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+                    showToast("Invalid phone number or password.");
+                } else if (error.message.includes("Access Denied")) {
+                    showToast("Access Denied. You are not an admin.");
+                } else {
+                    showToast(error.message);
+                }
+                
+                btn.disabled = false;
+                btn.innerText = "Secure Login";
+            }
+        });
+    </script>
+</body>
+</html>
