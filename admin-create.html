@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Create Admin</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #0f2563;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 25px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .dev-icon {
+            width: 70px; height: 70px;
+            background: #eef2ff;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 28px;
+            margin: 0 auto 20px auto;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            color: #a0aec0;
+            font-size: 16px;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+            background: #f8fafc;
+            transition: 0.3s;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-blue);
+            background: #ffffff;
+        }
+
+        .create-btn {
+            width: 100%;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 15px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .create-btn:disabled { background: #8a9de8; cursor: not-allowed; }
+
+        /* --- RESULT MODAL --- */
+        .result-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: 0.3s;
+            padding: 20px;
+        }
+        .result-overlay.active { opacity: 1; visibility: visible; }
+        
+        .result-box {
+            background: #fff;
+            width: 100%;
+            max-width: 350px;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: 0.3s;
+        }
+        .result-overlay.active .result-box { transform: scale(1); }
+
+        .success-icon {
+            font-size: 50px;
+            color: var(--success);
+            margin-bottom: 15px;
+        }
+        .result-box h3 { font-size: 18px; color: var(--text-dark); margin-bottom: 5px; }
+        .result-box p { font-size: 13px; color: var(--text-gray); margin-bottom: 20px; }
+
+        .credential-box {
+            background: #f8fafc;
+            border: 1px dashed var(--primary-blue);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .cred-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+        .cred-row:last-child { margin-bottom: 0; }
+        .cred-label { color: var(--text-gray); }
+        .cred-value { font-weight: 700; color: var(--primary-blue); font-family: monospace; font-size: 14px; }
+
+        .done-btn {
+            width: 100%; background: var(--primary-blue); color: white;
+            border: none; padding: 14px; border-radius: 10px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+        }
+
+        /* Toast */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(231, 76, 60, 0.95); color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="dev-icon"><i class="fa-solid fa-user-cog"></i></div>
+        <h1 class="title">Create Admin</h1>
+        <p class="subtitle">Developer Tool: Generate new admin accounts.</p>
+
+        <form id="createAdminForm">
+            <div class="input-group">
+                <label>Full Name</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="adminName" placeholder="e.g. John Doe" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Phone Number</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-phone"></i>
+                    <input type="tel" id="adminPhone" placeholder="e.g. 08012345678" required>
+                </div>
+            </div>
+
+            <button type="submit" id="createBtn" class="create-btn">Create Admin Account</button>
+        </form>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="result-overlay" id="resultModal">
+        <div class="result-box">
+            <i class="fa-solid fa-circle-check success-icon"></i>
+            <h3>Admin Created!</h3>
+            <p>Share these login details with the new admin.</p>
+
+            <div class="credential-box">
+                <div class="cred-row">
+                    <span class="cred-label">Phone:</span>
+                    <span class="cred-value" id="resPhone">-</span>
+                </div>
+                <div class="cred-row">
+                    <span class="cred-label">Password:</span>
+                    <span class="cred-value" id="resPassword">-</span>
+                </div>
+            </div>
+
+            <button class="done-btn" onclick="closeResult()">Done</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT (Using a SECONDARY app so the Developer doesn't get logged out of their current session)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        
+        // Use a secondary app to create users without logging out the main admin
+        const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+        const secondaryAuth = secondaryApp.auth();
+        const db = firebase.firestore(); // Use primary db for Firestore writes
+
+        // 2. HELPERS
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        function generatePassword() {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+            let pass = "";
+            for (let i = 0; i < 6; i++) {
+                pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return `Nxf-${pass}`;
+        }
+
+        // 3. CREATE ADMIN LOGIC
+        document.getElementById('createAdminForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('adminName').value.trim();
+            const phone = document.getElementById('adminPhone').value.trim();
+            const btn = document.getElementById('createBtn');
+
+            if (phone.length < 10) return showToast("Please enter a valid phone number.");
+
+            btn.disabled = true;
+            btn.innerText = "Generating Account...";
+
+            // Format phone and email
+            let formattedPhone = phone;
+            if (!phone.startsWith('+')) formattedPhone = `+234${phone}`;
+            const authEmail = `${formattedPhone.replace(/\s+/g, '')}@nexfund.com`;
+            
+            // Generate random password
+            const generatedPassword = generatePassword();
+            const userReferralCode = "ADM" + formattedPhone.slice(-5); 
+
+            try {
+                // 1. Create in Firebase Auth (Using Secondary App)
+                const userCredential = await secondaryAuth.createUserWithEmailAndPassword(authEmail, generatedPassword);
+                const user = userCredential.user;
+
+                // 2. Save to Firestore with Admin privileges
+                await db.collection("users").doc(user.uid).set({
+                    uid: user.uid,
+                    name: name,
+                    phoneNumber: formattedPhone,
+                    loginPassword: generatedPassword, // Save plaintext for admin panel
+                    fundPassword: generatedPassword,  // Set default fund password to same
+                    referredBy: "DIRECT",
+                    myReferralCode: userReferralCode,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    
+                    // Admin Flags
+                    role: "admin",
+                    isAdmin: true,
+                    
+                    // Initialize Wallets
+                    depositWallet: 0,
+                    withdrawalWallet: 0,
+                    totalInvested: 0,
+                    purchasedProducts: {}
+                });
+
+                // 3. Sign out of the secondary app so we don't interfere with anything
+                await secondaryAuth.signOut();
+
+                // 4. Show the generated password
+                document.getElementById('resPhone').innerText = formattedPhone;
+                document.getElementById('resPassword').innerText = generatedPassword;
+                document.getElementById('resultModal').classList.add('active');
+
+            } catch (error) {
+                console.error("Error creating admin:", error);
+                if (error.code === 'auth/email-already-in-use') {
+                    showToast("This phone number is already registered.");
+                } else {
+                    showToast("Failed to create account. Check console.");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Create Admin Account";
+            }
+        });
+
+        function closeResult() {
+            document.getElementById('resultModal').classList.remove('active');
+            document.getElementById('createAdminForm').reset();
+        }
+    </script>
+</body>
+</html>
