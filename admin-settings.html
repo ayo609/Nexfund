@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Platform Settings</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #16285c;
+            --light-bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .admin-header {
+            background: var(--dark-blue);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .admin-brand i { color: #4facfe; }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- CONTENT --- */
+        .content {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- SETTINGS CARD --- */
+        .settings-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .card-title i { color: var(--primary-blue); }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            transition: 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-blue);
+            background: #fff;
+        }
+        .form-group small {
+            display: block;
+            font-size: 10px;
+            color: var(--text-gray);
+            margin-top: 5px;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 15px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(29, 59, 186, 0.2);
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .save-btn:active { transform: scale(0.98); }
+        .save-btn:disabled { background: #8a9de8; cursor: not-allowed; }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 10px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Loading */
+        #loadingScreen { position: fixed; inset: 0; background: var(--light-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <div style="color: var(--primary-blue); font-weight: 600; font-size: 14px;">Loading Settings...</div>
+    </div>
+
+    <div class="admin-header">
+        <div class="admin-brand">
+            <i class="fa-solid fa-gear"></i>
+            Platform Settings
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-power-off"></i> Logout
+        </button>
+    </div>
+
+    <div class="content">
+        
+        <!-- COMMUNITY LINKS -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fa-brands fa-telegram"></i> Community Links</div>
+            
+            <div class="form-group">
+                <label>Official Telegram Group Link</label>
+                <input type="url" id="tgGroupLink" placeholder="https://t.me/your_group">
+                <small>This updates the Telegram button on the user dashboard.</small>
+            </div>
+
+            <div class="form-group">
+                <label>VIP Community Link</label>
+                <input type="url" id="tgVipLink" placeholder="https://t.me/your_vip_group">
+                <small>This updates the VIP Community button on the user dashboard.</small>
+            </div>
+        </div>
+
+        <!-- PLATFORM RULES -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fa-solid fa-sliders"></i> Platform Rules</div>
+            
+            <div class="form-group">
+                <label>Minimum Withdrawal (₦)</label>
+                <input type="number" id="minWithdrawal" placeholder="e.g. 1000">
+            </div>
+
+            <div class="form-group">
+                <label>Withdrawal Start Hour (24h Format)</label>
+                <input type="number" id="withdrawStart" placeholder="e.g. 9" min="0" max="23">
+                <small>9 means 9:00 AM.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Withdrawal End Hour (24h Format)</label>
+                <input type="number" id="withdrawEnd" placeholder="e.g. 18" min="0" max="23">
+                <small>18 means 6:00 PM.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Daily Check-In Amount (₦)</label>
+                <input type="number" id="checkinAmount" placeholder="e.g. 200">
+            </div>
+        </div>
+
+        <!-- REFERRAL BONUSES -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fa-solid fa-users"></i> Referral Bonuses (%)</div>
+            
+            <div class="form-group">
+                <label>Level A Bonus (%)</label>
+                <input type="number" id="bonusA" placeholder="e.g. 10">
+            </div>
+            <div class="form-group">
+                <label>Level B Bonus (%)</label>
+                <input type="number" id="bonusB" placeholder="e.g. 3">
+            </div>
+            <div class="form-group">
+                <label>Level C Bonus (%)</label>
+                <input type="number" id="bonusC" placeholder="e.g. 1">
+            </div>
+        </div>
+
+        <button class="save-btn" id="saveBtn" onclick="saveSettings()">Save All Settings</button>
+
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="admin-dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="admin-users.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Users</span></a>
+        <a href="admin-withdrawals.html" class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i><span>Payouts</span></a>
+        <a href="admin-products.html" class="nav-item"><i class="fa-solid fa-box"></i><span>Products</span></a>
+        <a href="admin-settings.html" class="nav-item active"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. HELPERS
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // 3. SECURITY CHECK & LOAD DATA
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists && doc.data().isAdmin === true && doc.data().role === "admin") {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    loadSettings();
+                } else {
+                    await auth.signOut();
+                    window.location.href = "admin-login.html";
+                }
+            } else {
+                window.location.href = "admin-login.html";
+            }
+        });
+
+        // 4. FETCH SETTINGS FROM FIRESTORE
+        async function loadSettings() {
+            try {
+                const doc = await db.collection("settings").doc("platform").get();
+                
+                if (doc.exists) {
+                    const s = doc.data();
+                    
+                    // Community Links
+                    document.getElementById('tgGroupLink').value = s.tgGroupLink || "";
+                    document.getElementById('tgVipLink').value = s.tgVipLink || "";
+                    
+                    // Platform Rules
+                    document.getElementById('minWithdrawal').value = s.minWithdrawal || 1000;
+                    document.getElementById('withdrawStart').value = s.withdrawStart || 9;
+                    document.getElementById('withdrawEnd').value = s.withdrawEnd || 18;
+                    document.getElementById('checkinAmount').value = s.checkinAmount || 200;
+                    
+                    // Referral Bonuses
+                    document.getElementById('bonusA').value = s.bonusA || 10;
+                    document.getElementById('bonusB').value = s.bonusB || 3;
+                    document.getElementById('bonusC').value = s.bonusC || 1;
+                } else {
+                    // If no settings exist yet, set defaults
+                    document.getElementById('minWithdrawal').value = 1000;
+                    document.getElementById('withdrawStart').value = 9;
+                    document.getElementById('withdrawEnd').value = 18;
+                    document.getElementById('checkinAmount').value = 200;
+                    document.getElementById('bonusA').value = 10;
+                    document.getElementById('bonusB').value = 3;
+                    document.getElementById('bonusC').value = 1;
+                }
+            } catch (error) {
+                console.error("Error loading settings:", error);
+                showToast("Failed to load settings.", true);
+            }
+        }
+
+        // 5. SAVE SETTINGS TO FIRESTORE
+        async function saveSettings() {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            const settingsData = {
+                tgGroupLink: document.getElementById('tgGroupLink').value.trim(),
+                tgVipLink: document.getElementById('tgVipLink').value.trim(),
+                minWithdrawal: parseFloat(document.getElementById('minWithdrawal').value) || 1000,
+                withdrawStart: parseInt(document.getElementById('withdrawStart').value) || 9,
+                withdrawEnd: parseInt(document.getElementById('withdrawEnd').value) || 18,
+                checkinAmount: parseFloat(document.getElementById('checkinAmount').value) || 200,
+                bonusA: parseFloat(document.getElementById('bonusA').value) || 10,
+                bonusB: parseFloat(document.getElementById('bonusB').value) || 3,
+                bonusC: parseFloat(document.getElementById('bonusC').value) || 1,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                // Save to settings/platform document
+                await db.collection("settings").doc("platform").set(settingsData, { merge: true });
+                
+                showToast("Settings saved successfully!", true);
+                btn.innerText = "Save All Settings";
+                btn.disabled = false;
+
+            } catch (error) {
+                console.error("Save error:", error);
+                showToast("Failed to save settings.", true);
+                btn.innerText = "Save All Settings";
+                btn.disabled = false;
+            }
+        }
+
+        // 6. LOGOUT
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = "admin-login.html";
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
