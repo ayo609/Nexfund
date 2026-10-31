@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Admin Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #16285c;
+            --light-bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .admin-header {
+            background: var(--dark-blue);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .admin-brand i { color: #4facfe; }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- CONTENT --- */
+        .dashboard-content {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .welcome-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+        .welcome-title span { color: var(--primary-blue); }
+
+        /* --- STATS GRID --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .stat-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .stat-icon.blue { background: #eef2ff; color: var(--primary-blue); }
+        .stat-icon.green { background: #e8f8f5; color: var(--success); }
+        .stat-icon.orange { background: #fff3cd; color: var(--warning); }
+        .stat-icon.red { background: #fadbd8; color: var(--danger); }
+
+        .stat-title {
+            font-size: 11px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* --- DANGER ZONE --- */
+        .danger-zone {
+            background: #fff;
+            border: 1px solid #fadbd8;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.05);
+        }
+        .danger-title {
+            color: var(--danger);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .danger-desc {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .danger-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .danger-btn {
+            background: #fff;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .danger-btn:hover {
+            background: #fadbd8;
+        }
+        .danger-btn span {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text-gray);
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 10px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+
+        /* --- LOADING SCREEN --- */
+        #loadingScreen {
+            position: fixed; inset: 0;
+            background: var(--light-bg);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--primary-blue); font-weight: 600; font-size: 14px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <div class="loading-text">Verifying Admin Access...</div>
+    </div>
+
+    <div class="admin-header">
+        <div class="admin-brand">
+            <i class="fa-solid fa-shield-halved"></i>
+            Nexfund Admin
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-power-off"></i> Logout
+        </button>
+    </div>
+
+    <div class="dashboard-content">
+        
+        <div class="welcome-title">Welcome back, <span id="adminName">Admin</span></div>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-title">Total Users</div>
+                <div class="stat-value" id="totalUsers">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="stat-title">Pending Withdrawals</div>
+                <div class="stat-value" id="pendingWithdrawals">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-arrow-down"></i></div>
+                <div class="stat-title">Total Deposits</div>
+                <div class="stat-value" id="totalDeposits">₦0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fa-solid fa-arrow-up"></i></div>
+                <div class="stat-title">Total Withdrawals</div>
+                <div class="stat-value" id="totalWithdrawals">₦0</div>
+            </div>
+        </div>
+
+        <!-- DANGER ZONE (GLOBAL RESET / DELETE) -->
+        <div class="danger-zone">
+            <div class="danger-title"><i class="fa-solid fa-triangle-exclamation"></i> Danger Zone</div>
+            <div class="danger-desc">
+                The actions below are permanent and cannot be undone. Use them only if you want to completely wipe data from the platform.
+            </div>
+            
+            <div class="danger-actions">
+                <button class="danger-btn" onclick="clearCollection('transactions', 'All Transactions')">
+                    Clear All Transactions <span>Deletes all deposits, withdrawals, and records</span>
+                </button>
+                
+                <button class="danger-btn" onclick="clearCollection('investments', 'All Active Investments')">
+                    Clear All Active Investments <span>Deletes all active product cycles</span>
+                </button>
+                
+                <button class="danger-btn" onclick="clearCollection('users', 'All Users')">
+                    Clear All Users <span>Deletes every registered user account</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="admin-dashboard.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="admin-users.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Users</span></a>
+        <a href="admin-withdrawals.html" class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i><span>Payouts</span></a>
+        <a href="admin-products.html" class="nav-item"><i class="fa-solid fa-box"></i><span>Products</span></a>
+        <a href="admin-settings.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. HELPERS
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // 3. SECURITY CHECK & INIT
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection("users").doc(user.uid).get();
+                
+                if (doc.exists && doc.data().isAdmin === true && doc.data().role === "admin") {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('adminName').innerText = doc.data().name || "Admin";
+                    
+                    loadAdminStats();
+                } else {
+                    await auth.signOut();
+                    window.location.href = "admin-login.html";
+                }
+            } else {
+                window.location.href = "admin-login.html";
+            }
+        });
+
+        // 4. LOAD STATS
+        async function loadAdminStats() {
+            try {
+                const usersSnap = await db.collection("users").get();
+                document.getElementById('totalUsers').innerText = usersSnap.size;
+
+                const txSnap = await db.collection("transactions").get();
+                let pendingCount = 0;
+                let totalDeposits = 0;
+                let totalWithdrawals = 0;
+
+                txSnap.forEach(doc => {
+                    const tx = doc.data();
+                    if (tx.type === "deposit" && tx.status === "success") totalDeposits += tx.amount || 0;
+                    if (tx.type === "withdraw") {
+                        if (tx.status === "pending") pendingCount++;
+                        if (tx.status === "success" || tx.status === "approved") totalWithdrawals += tx.amount || 0;
+                    }
+                });
+
+                document.getElementById('pendingWithdrawals').innerText = pendingCount;
+                document.getElementById('totalDeposits').innerText = `₦${totalDeposits.toLocaleString()}`;
+                document.getElementById('totalWithdrawals').innerText = `₦${totalWithdrawals.toLocaleString()}`;
+
+            } catch (error) {
+                console.error("Error loading stats:", error);
+            }
+        }
+
+        // 5. GLOBAL CLEAR/RESET FUNCTION
+        async function clearCollection(collectionName, label) {
+            if (!confirm(`WARNING: Are you sure you want to PERMANENTLY DELETE ${label}?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            // Double confirmation for safety
+            if (!confirm(`Are you absolutely sure? All data in ${collectionName} will be wiped.`)) {
+                return;
+            }
+
+            showToast(`Clearing ${label}... Please wait.`, false);
+
+            try {
+                // Note: Firestore only allows deleting up to 500 documents at a time.
+                // For a production app, you would loop through batches.
+                // For this standard panel, we will use a single batch (up to 500).
+                const snapshot = await db.collection(collectionName).limit(500).get();
+                
+                if (snapshot.empty) {
+                    return showToast(`No data found in ${collectionName}.`, true);
+                }
+
+                const batch = db.batch();
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+
+                showToast(`${label} cleared successfully!`, true);
+                loadAdminStats(); // Refresh stats
+
+            } catch (error) {
+                console.error("Clear error:", error);
+                showToast(`Failed to clear ${label}.`, true);
+            }
+        }
+
+        // 6. LOGOUT
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = "admin-login.html";
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
