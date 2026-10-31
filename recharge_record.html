@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Recharge History</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #f0f4ff;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #777;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --border-dashed: #d1d9f0;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .top-header {
+            background: var(--primary-blue);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            margin-right: 20px;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        /* --- CONTENT --- */
+        .content-section {
+            padding: 20px 15px;
+        }
+
+        .section-heading {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+
+        /* --- TRANSACTION CARDS --- */
+        .transaction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tx-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border-left: 4px solid var(--warning); /* Pending */
+        }
+        .tx-card.approved { border-left-color: var(--success); }
+        .tx-card.rejected { border-left-color: var(--danger); }
+
+        .tx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .tx-left { display: flex; flex-direction: column; }
+        .tx-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .tx-date { font-size: 11px; color: var(--text-gray); margin-top: 3px; }
+        
+        .tx-amount { font-size: 17px; font-weight: 800; color: var(--success); }
+        
+        .tx-status {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-approved { background: #e8f8f5; color: var(--success); }
+        .status-rejected { background: #fadbd8; color: var(--danger); }
+
+        .tx-details {
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 10px;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tx-info-row {
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+        .tx-info-row strong { color: var(--text-dark); }
+
+        .view-receipt-btn {
+            background: #eef2ff;
+            color: var(--primary-blue);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        /* Loading / Empty State */
+        .loading-spinner {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 14px;
+            padding: 40px 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+        }
+
+        /* --- IMAGE VIEWER --- */
+        .image-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: 0.3s;
+            padding: 20px;
+        }
+        .image-modal.active { opacity: 1; visibility: visible; }
+        .image-modal img {
+            max-width: 100%; max-height: 85vh;
+            border-radius: 10px;
+        }
+        .close-image {
+            position: absolute; top: 20px; right: 20px;
+            background: #fff; border: none; width: 40px; height: 40px;
+            border-radius: 50%; font-size: 18px; cursor: pointer;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOP HEADER ============ -->
+    <div class="top-header">
+        <a href="profile.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+        <div class="header-title">Recharge History</div>
+    </div>
+
+    <div class="content-section">
+        
+        <div class="section-heading">Deposit History</div>
+
+        <!-- TRANSACTIONS LIST -->
+        <div class="transaction-list" id="transactionContainer">
+            <div class="loading-spinner">Loading your deposits...</div>
+        </div>
+
+    </div>
+
+    <!-- IMAGE VIEWER MODAL -->
+    <div class="image-modal" id="imageModal" onclick="closeImage()">
+        <button class="close-image"><i class="fa-solid fa-xmark"></i></button>
+        <img id="modalImage" src="" alt="Receipt">
+    </div>
+
+    <!-- ============ BOTTOM NAVIGATION ============ -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item active"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <!-- ============ FIREBASE SDKs ============ -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let allDeposits = [];
+
+        // 2. FETCH DATA
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                fetchRechargeHistory(user.uid);
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // 3. FETCH RECHARGE TRANSACTIONS
+        async function fetchRechargeHistory(uid) {
+            const container = document.getElementById('transactionContainer');
+
+            try {
+                // Simple query without orderBy to avoid index requirement
+                const snap = await db.collection("transactions")
+                    .where("userId", "==", uid)
+                    .where("type", "==", "deposit")
+                    .get();
+
+                if (snap.empty) {
+                    container.innerHTML = `<div class="loading-spinner">No recharge records yet.</div>`;
+                    return;
+                }
+
+                allDeposits = [];
+                snap.forEach(doc => {
+                    allDeposits.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort manually by newest first (avoids Firestore index)
+                allDeposits.sort((a, b) => {
+                    const tA = a.timestamp ? a.timestamp.toMillis() : 0;
+                    const tB = b.timestamp ? b.timestamp.toMillis() : 0;
+                    return tB - tA;
+                });
+
+                renderHistory();
+
+            } catch (err) {
+                console.error("Error fetching recharge history:", err);
+                container.innerHTML = `<div class="loading-spinner">Failed to load records. Please check your internet.</div>`;
+            }
+        }
+
+        // 4. RENDER HISTORY
+        function renderHistory() {
+            const container = document.getElementById('transactionContainer');
+            
+            if (allDeposits.length === 0) {
+                container.innerHTML = `<div class="loading-spinner">No recharge records yet.</div>`;
+                return;
+            }
+
+            container.innerHTML = allDeposits.map(t => {
+                const date = t.timestamp ? t.timestamp.toDate() : new Date();
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Determine status
+                let statusClass = 'status-pending';
+                let cardClass = '';
+                if (t.status === 'success' || t.status === 'approved') {
+                    statusClass = 'status-approved';
+                    cardClass = 'approved';
+                } else if (t.status === 'rejected') {
+                    statusClass = 'status-rejected';
+                    cardClass = 'rejected';
+                }
+
+                return `
+                    <div class="tx-card ${cardClass}">
+                        <div class="tx-header">
+                            <div class="tx-left">
+                                <div class="tx-title">Account Deposit</div>
+                                <div class="tx-date">${dateStr}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="tx-amount">+₦${(t.amount || 0).toLocaleString()}</div>
+                                <div class="tx-status ${statusClass}">${t.status}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="tx-details">
+                            <div class="tx-info-row">
+                                Sender: <strong>${t.senderName || 'N/A'}</strong>
+                            </div>
+                            ${t.receiptImage ? `
+                                <button class="view-receipt-btn" onclick="viewReceipt('${t.id}')">
+                                    <i class="fa-solid fa-image"></i> Receipt
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 5. VIEW RECEIPT
+        function viewReceipt(txId) {
+            const dep = allDeposits.find(d => d.id === txId);
+            if (dep && dep.receiptImage) {
+                document.getElementById('modalImage').src = dep.receiptImage;
+                document.getElementById('imageModal').classList.add('active');
+            }
+        }
+
+        function closeImage() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
