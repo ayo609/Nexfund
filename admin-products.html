@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Manage Products</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #16285c;
+            --light-bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        /* --- TOP HEADER --- */
+        .admin-header {
+            background: var(--dark-blue);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .admin-brand i { color: #4facfe; }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* --- CONTENT --- */
+        .content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- ACTION BAR (Bulk) --- */
+        .action-bar {
+            display: none;
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #eef2ff;
+        }
+        .action-bar span { font-size: 13px; font-weight: 600; color: var(--primary-blue); }
+        .btn-delete-bulk {
+            background: #fadbd8; color: #b91c1c;
+            padding: 8px 15px; border-radius: 8px;
+            border: none; font-size: 12px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* --- LIST HEADER --- */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+        .list-header h3 { font-size: 16px; color: var(--text-dark); }
+        .add-btn {
+            background: var(--primary-blue); color: white;
+            border: none; padding: 8px 15px; border-radius: 10px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* --- PRODUCT LIST --- */
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        .product-card.inactive {
+            border-left-color: #ccc;
+            opacity: 0.7;
+        }
+        .p-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-blue); }
+        .p-info { flex: 1; }
+        .p-name { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+        .p-meta { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+        .p-price { font-size: 14px; font-weight: 700; color: var(--primary-blue); margin-top: 5px; }
+        
+        .p-actions { display: flex; flex-direction: column; gap: 8px; }
+        .edit-btn, .toggle-btn {
+            padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; border: none;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .edit-btn { background: #eef2ff; color: var(--primary-blue); }
+        .toggle-btn.active { background: #e8f8f5; color: var(--success); }
+        .toggle-btn.inactive { background: #fadbd8; color: var(--danger); }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(3px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease;
+            padding: 15px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-box {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+
+        .modal-header {
+            background: var(--primary-blue); color: white;
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 16px; font-weight: 700; }
+        .close-modal { background: rgba(255,255,255,0.2); border: none; width: 30px; height: 30px; border-radius: 50%; color: white; cursor: pointer; }
+
+        .modal-content { padding: 20px; overflow-y: auto; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px;
+            border: 1px solid #e2e8f0; border-radius: 10px;
+            font-size: 13px; outline: none; background: #f8fafc;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary-blue); background: #fff; }
+
+        .modal-footer { padding: 0 20px 20px; }
+        .save-btn {
+            width: 100%; background: var(--primary-blue); color: white;
+            border: none; padding: 14px; border-radius: 10px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+        }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-gray);
+            background: #fff; border-radius: 15px; font-size: 14px;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 10px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Loading */
+        #loadingScreen { position: fixed; inset: 0; background: var(--light-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <div style="color: var(--primary-blue); font-weight: 600; font-size: 14px;">Loading Products...</div>
+    </div>
+
+    <div class="admin-header">
+        <div class="admin-brand">
+            <i class="fa-solid fa-box"></i>
+            Manage Products
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-power-off"></i> Logout
+        </button>
+    </div>
+
+    <div class="content">
+        
+        <!-- BULK ACTIONS -->
+        <div class="action-bar" id="actionBar">
+            <span id="selectedCount">0 selected</span>
+            <button class="btn-delete-bulk" onclick="deleteSelected()"><i class="fa-solid fa-trash"></i> Delete</button>
+        </div>
+
+        <!-- LIST HEADER -->
+        <div class="list-header">
+            <h3>All Products</h3>
+            <button class="add-btn" onclick="openProductModal()"><i class="fa-solid fa-plus"></i> Add Product</button>
+        </div>
+
+        <!-- PRODUCT LIST -->
+        <div class="product-list" id="productList">
+            <div class="empty-state">Loading products...</div>
+        </div>
+
+    </div>
+
+    <!-- ADD/EDIT PRODUCT MODAL -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Product</h3>
+                <button class="close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-content">
+                <input type="hidden" id="productId">
+                
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="pName" placeholder="e.g., Nexfund A">
+                </div>
+                
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="pCategory">
+                        <option value="ordinary">Ordinary Projects</option>
+                        <option value="limited">Limited-Time</option>
+                        <option value="hot">Hot</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Price (₦)</label>
+                    <input type="number" id="pPrice" placeholder="e.g., 6000">
+                </div>
+
+                <div class="form-group">
+                    <label>Total Return (₦)</label>
+                    <input type="number" id="pReturn" placeholder="e.g., 8400">
+                </div>
+
+                <div class="form-group">
+                    <label>Duration (Days)</label>
+                    <input type="number" id="pDuration" placeholder="e.g., 2">
+                </div>
+
+                <div class="form-group">
+                    <label>Purchase Limit (Per User)</label>
+                    <input type="number" id="pLimit" placeholder="e.g., 1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="save-btn" id="saveBtn" onclick="saveProduct()">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="admin-dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="admin-users.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Users</span></a>
+        <a href="admin-withdrawals.html" class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i><span>Payouts</span></a>
+        <a href="admin-products.html" class="nav-item active"><i class="fa-solid fa-box"></i><span>Products</span></a>
+        <a href="admin-settings.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 1. FIREBASE INIT
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let allProducts = [];
+
+        // 2. HELPERS
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // 3. SECURITY CHECK & INIT
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists && doc.data().isAdmin === true && doc.data().role === "admin") {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    loadProducts();
+                } else {
+                    await auth.signOut();
+                    window.location.href = "admin-login.html";
+                }
+            } else {
+                window.location.href = "admin-login.html";
+            }
+        });
+
+        // 4. LOAD PRODUCTS
+        async function loadProducts() {
+            const listEl = document.getElementById('productList');
+            try {
+                const snap = await db.collection("products").orderBy("name").get();
+                allProducts = [];
+                snap.forEach(doc => {
+                    allProducts.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderProducts();
+            } catch (error) {
+                console.error("Error loading products:", error);
+                listEl.innerHTML = `<div class="empty-state">Failed to load products.</div>`;
+            }
+        }
+
+        // 5. RENDER LIST
+        function renderProducts() {
+            const listEl = document.getElementById('productList');
+            
+            if (allProducts.length === 0) {
+                listEl.innerHTML = `<div class="empty-state">No products created yet.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = allProducts.map(p => {
+                const isActive = p.active !== false;
+                const statusClass = isActive ? 'active' : 'inactive';
+                const statusText = isActive ? 'Active' : 'Hidden';
+                
+                return `
+                    <div class="product-card ${isActive ? '' : 'inactive'}">
+                        <input type="checkbox" class="p-checkbox" value="${p.id}" onchange="updateActionBar()">
+                        <div class="p-info">
+                            <div class="p-name">${p.name}</div>
+                            <div class="p-meta">${p.duration} Days · Limit: ${p.limit} · ${p.category.toUpperCase()}</div>
+                            <div class="p-price">₦${p.price.toLocaleString()} → ₦${p.totalReturn.toLocaleString()}</div>
+                        </div>
+                        <div class="p-actions">
+                            <button class="edit-btn" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                            <button class="toggle-btn ${statusClass}" onclick="toggleStatus('${p.id}', ${isActive})">
+                                ${statusText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 6. OPEN MODAL (ADD / EDIT)
+        function openProductModal() {
+            document.getElementById('modalTitle').innerText = "Add New Product";
+            document.getElementById('productId').value = "";
+            document.getElementById('pName').value = "";
+            document.getElementById('pCategory').value = "ordinary";
+            document.getElementById('pPrice').value = "";
+            document.getElementById('pReturn').value = "";
+            document.getElementById('pDuration').value = "";
+            document.getElementById('pLimit').value = "";
+            
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function editProduct(id) {
+            const p = allProducts.find(prod => prod.id === id);
+            if (!p) return;
+
+            document.getElementById('modalTitle').innerText = "Edit Product";
+            document.getElementById('productId').value = p.id;
+            document.getElementById('pName').value = p.name;
+            document.getElementById('pCategory').value = p.category || 'ordinary';
+            document.getElementById('pPrice').value = p.price;
+            document.getElementById('pReturn').value = p.totalReturn;
+            document.getElementById('pDuration').value = p.duration;
+            document.getElementById('pLimit').value = p.limit;
+
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.remove('active');
+        }
+
+        // 7. SAVE PRODUCT (ADD / UPDATE)
+        async function saveProduct() {
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('pName').value.trim();
+            const category = document.getElementById('pCategory').value;
+            const price = parseFloat(document.getElementById('pPrice').value);
+            const totalReturn = parseFloat(document.getElementById('pReturn').value);
+            const duration = parseInt(document.getElementById('pDuration').value);
+            const limit = parseInt(document.getElementById('pLimit').value);
+
+            if (!name || !price || !totalReturn || !duration || !limit) {
+                return showToast("Please fill all fields correctly.", true);
+            }
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            const data = {
+                name: name,
+                category: category,
+                price: price,
+                totalReturn: totalReturn,
+                duration: duration,
+                limit: limit,
+                active: true // Default to active for new products
+            };
+
+            try {
+                if (id) {
+                    // Update existing
+                    await db.collection("products").doc(id).update(data);
+                    showToast("Product updated successfully!", true);
+                } else {
+                    // Create new
+                    await db.collection("products").add(data);
+                    showToast("Product created successfully!", true);
+                }
+                
+                closeModal();
+                loadProducts();
+
+            } catch (error) {
+                console.error("Save error:", error);
+                showToast("Failed to save product.", true);
+            } finally {
+                btn.innerText = "Save Product";
+                btn.disabled = false;
+            }
+        }
+
+        // 8. TOGGLE STATUS (ACTIVE / HIDDEN)
+        async function toggleStatus(id, currentlyActive) {
+            try {
+                await db.collection("products").doc(id).update({
+                    active: !currentlyActive
+                });
+                showToast(`Product ${currentlyActive ? 'Hidden' : 'Activated'}!`, true);
+                loadProducts();
+            } catch (error) {
+                console.error("Toggle error:", error);
+                showToast("Failed to change status.", true);
+            }
+        }
+
+        // 9. BULK DELETE
+        function updateActionBar() {
+            const checked = document.querySelectorAll('.p-checkbox:checked');
+            const bar = document.getElementById('actionBar');
+            
+            if (checked.length > 0) {
+                bar.style.display = 'flex';
+                document.getElementById('selectedCount').innerText = `${checked.length} selected`;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        async function deleteSelected() {
+            const checked = document.querySelectorAll('.p-checkbox:checked');
+            const ids = Array.from(checked).map(cb => cb.value);
+            if (ids.length === 0) return;
+
+            if (!confirm(`WARNING: Are you sure you want to permanently DELETE ${ids.length} product(s)? This cannot be undone.`)) return;
+
+            try {
+                const batch = db.batch();
+                ids.forEach(id => batch.delete(db.collection("products").doc(id)));
+                await batch.commit();
+                
+                showToast(`${ids.length} product(s) deleted.`, true);
+                document.getElementById('actionBar').style.display = 'none';
+                loadProducts();
+            } catch (error) {
+                console.error("Delete error:", error);
+                showToast("Failed to delete products.", true);
+            }
+        }
+
+        // 10. LOGOUT
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = "admin-login.html";
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
