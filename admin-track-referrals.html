@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Track Referrals</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #16285c;
+            --light-bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        .admin-header {
+            background: var(--dark-blue);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .admin-brand i { color: #4facfe; }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { color: var(--primary-blue); }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+        .input-group input:focus { border-color: var(--primary-blue); background: #fff; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 15px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary-blue); color: white; }
+        .btn-primary:disabled { background: #8a9de8; cursor: not-allowed; }
+        .btn-success { background: var(--success); color: white; }
+
+        .info-row {
+            display: flex; justify-content: space-between;
+            padding: 8px 0; font-size: 13px; border-bottom: 1px dashed #e2e8f0;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-gray); }
+        .info-value { font-weight: 600; color: var(--text-dark); text-align: right; }
+
+        /* TABS */
+        .tab-container {
+            display: flex;
+            gap: 5px;
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-gray);
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .tab-btn.active { background: #fff; color: var(--primary-blue); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* TRACK CARDS */
+        .track-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        .track-card.paid { border-left-color: var(--success); }
+        .track-card.missing { border-left-color: var(--danger); }
+
+        .track-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .track-phone { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .track-level { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #eef2ff; color: var(--primary-blue); }
+        
+        .track-details { font-size: 12px; color: var(--text-gray); margin-bottom: 10px; }
+        .track-details strong { color: var(--text-dark); }
+
+        .track-status-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .status-badge {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+        .status-paid { background: #e8f8f5; color: var(--success); }
+        .status-missing { background: #fadbd8; color: var(--danger); }
+
+        .no-data { text-align: center; color: var(--text-gray); font-size: 13px; padding: 20px; }
+
+        /* PAYOUT SUMMARY BOX */
+        .payout-summary-box {
+            background: linear-gradient(135deg, var(--primary-blue), #3b5bdb);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .payout-title { font-size: 14px; opacity: 0.9; margin-bottom: 5px; }
+        .payout-amount { font-size: 32px; font-weight: 800; margin-bottom: 15px; }
+        
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 10px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+
+        #loadingScreen { position: fixed; inset: 0; background: var(--light-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <div style="color: var(--primary-blue); font-weight: 600; font-size: 14px;">Loading...</div>
+    </div>
+
+    <div class="admin-header">
+        <div class="admin-brand">
+            <i class="fa-solid fa-sitemap"></i>
+            Track Referrals
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-power-off"></i> Logout
+        </button>
+    </div>
+
+    <div class="content">
+        
+        <div class="card">
+            <div class="section-title">
+                <i class="fa-solid fa-search"></i> Search User by Phone
+            </div>
+            
+            <div class="input-group">
+                <label>User Phone Number</label>
+                <input type="tel" id="searchPhone" placeholder="e.g. 08012345678">
+            </div>
+
+            <button class="btn btn-primary" id="searchBtn" onclick="searchUser()">
+                <i class="fa-solid fa-search"></i> Find User
+            </button>
+        </div>
+
+        <!-- USER INFO & TABS -->
+        <div class="card" id="userInfoCard" style="display:none;">
+            <div class="section-title">
+                <i class="fa-solid fa-user"></i> User Details
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">User Phone:</span>
+                <span class="info-value" id="displayPhone">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Referral Code:</span>
+                <span class="info-value" id="displayCode">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Current Wallet:</span>
+                <span class="info-value" id="displayWallet">₦0</span>
+            </div>
+
+            <!-- TABS -->
+            <div class="tab-container" style="margin-top:20px;">
+                <button class="tab-btn active" onclick="switchTab('downlines', this)">Downlines</button>
+                <button class="tab-btn" onclick="switchTab('payout', this)">Payout Summary</button>
+            </div>
+
+            <!-- TAB 1: DOWNLINES -->
+            <div id="tab-downlines" class="tab-content active">
+                <div id="downlinesList">
+                    <div class="no-data">Loading downlines...</div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PAYOUT SUMMARY -->
+            <div id="tab-payout" class="tab-content">
+                <div class="payout-summary-box">
+                    <div class="payout-title">Total Missing Bonus to Credit</div>
+                    <div class="payout-amount" id="missingBonusTotal">₦0</div>
+                    
+                    <button class="btn btn-success" id="creditBtn" onclick="creditMissingBonus()" style="margin-top:10px; display:none;">
+                        <i class="fa-solid fa-plus-circle"></i> Credit to Wallet
+                    </button>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div class="section-title" style="font-size:13px;">Breakdown by Level</div>
+                    <div class="info-row"><span class="info-label">Level A (10%):</span> <span class="info-value" id="levelAExpected">₦0</span></div>
+                    <div class="info-row"><span class="info-label">Level B (3%):</span> <span class="info-value" id="levelBExpected">₦0</span></div>
+                    <div class="info-row"><span class="info-label">Level C (1%):</span> <span class="info-value" id="levelCExpected">₦0</span></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <div class="bottom-nav">
+        <a href="admin-dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="admin-users.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Users</span></a>
+        <a href="admin-withdrawals.html" class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i><span>Payouts</span></a>
+        <a href="admin-products.html" class="nav-item"><i class="fa-solid fa-box"></i><span>Products</span></a>
+        <a href="admin-settings.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let missingBonusTotal = 0;
+        let breakdownA = 0, breakdownB = 0, breakdownC = 0;
+        let missingBonusRecords = []; // Stores { downlinePhone, level, expectedBonus }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 4000);
+        }
+
+        // ✅ SECURITY CHECK
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists && doc.data().isAdmin === true && doc.data().role === "admin") {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                } else {
+                    await auth.signOut();
+                    window.location.href = "admin-login.html";
+                }
+            } else {
+                window.location.href = "admin-login.html";
+            }
+        });
+
+        // ✅ TAB SWITCHING
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // ✅ SEARCH USER
+        async function searchUser() {
+            const phone = document.getElementById('searchPhone').value.trim();
+            if (!phone) return showToast("Please enter a phone number.", true);
+
+            let formattedPhone = phone;
+            if (!phone.startsWith('+')) {
+                if (phone.startsWith('0')) {
+                    formattedPhone = `+234${phone.substring(1)}`;
+                } else {
+                    formattedPhone = `+234${phone}`;
+                }
+            }
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Searching...';
+
+            try {
+                const snap = await db.collection("users").where("phoneNumber", "==", formattedPhone).get();
+                
+                if (snap.empty) {
+                    showToast("No user found with that phone number.", true);
+                    document.getElementById('userInfoCard').style.display = 'none';
+                    return;
+                }
+
+                const userData = snap.docs[0].data();
+                currentUser = { id: snap.docs[0].id, ...userData };
+
+                // Show user info
+                document.getElementById('displayPhone').innerText = userData.phoneNumber || "N/A";
+                document.getElementById('displayCode').innerText = userData.myReferralCode || "N/A";
+                document.getElementById('displayWallet').innerText = `₦${(userData.withdrawalWallet || 0).toLocaleString()}`;
+                document.getElementById('userInfoCard').style.display = 'block';
+
+                // Load downlines
+                await loadDownlines(userData);
+
+            } catch (error) {
+                console.error("Search error:", error);
+                showToast("Failed to search. Try again.", true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-search"></i> Find User';
+            }
+        }
+
+        // ✅ LOAD DOWNLINES & CALCULATE BONUSES
+        async function loadDownlines(userData) {
+            const listEl = document.getElementById('downlinesList');
+            listEl.innerHTML = '<div class="no-data">Loading downlines...</div>';
+
+            missingBonusTotal = 0;
+            breakdownA = 0; breakdownB = 0; breakdownC = 0;
+            missingBonusRecords = [];
+            let html = '';
+
+            try {
+                // 1. Fetch Level A (Direct downlines)
+                const levelASnap = await db.collection("users").where("referredBy", "==", userData.myReferralCode).get();
+                
+                if (levelASnap.empty) {
+                    listEl.innerHTML = '<div class="no-data">No downlines found.</div>';
+                    document.getElementById('missingBonusTotal').innerText = "₦0";
+                    document.getElementById('creditBtn').style.display = 'none';
+                    return;
+                }
+
+                // 2. Loop through Level A downlines
+                for (const docA of levelASnap.docs) {
+                    const downlineA = docA.data();
+                    
+                    const investedA = downlineA.totalInvested || 0;
+                    if (investedA <= 0) continue; // Skip if they never bought
+
+                    const expectedBonusA = investedA * 0.10; // 10% for Level A
+
+                    // ✅ FIX: Check commissions by userId and fromUser (Phone Number)
+                    const commSnap = await db.collection("commissions")
+                        .where("userId", "==", currentUser.id)
+                        .where("fromUser", "==", downlineA.phoneNumber)
+                        .get();
+                    
+                    let actualPaidA = 0;
+                    commSnap.forEach(c => actualPaidA += c.data().amount || 0);
+                    
+                    const isPaidA = actualPaidA >= expectedBonusA;
+                    
+                    if (!isPaidA) {
+                        const missingA = expectedBonusA - actualPaidA;
+                        breakdownA += missingA;
+                        missingBonusTotal += missingA;
+                        missingBonusRecords.push({ phone: downlineA.phoneNumber, level: 'A', amount: missingA, fromUser: downlineA.phoneNumber });
+                    }
+
+                    html += `
+                        <div class="track-card ${isPaidA ? 'paid' : 'missing'}">
+                            <div class="track-header">
+                                <span class="track-phone"><i class="fa-solid fa-phone"></i> ${downlineA.phoneNumber}</span>
+                                <span class="track-level">Level A</span>
+                            </div>
+                            <div class="track-details">
+                                Invested: <strong>₦${investedA.toLocaleString()}</strong>
+                            </div>
+                            <div class="track-status-box">
+                                <div>
+                                    Expected: <strong>₦${expectedBonusA.toLocaleString()}</strong><br>
+                                    Paid: <strong>₦${actualPaidA.toLocaleString()}</strong>
+                                </div>
+                                <span class="status-badge ${isPaidA ? 'status-paid' : 'status-missing'}">
+                                    ${isPaidA ? '✅ Paid' : '❌ Missing'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+
+                    // ✅ LEVEL B (Referred by Level A)
+                    const levelBSnap = await db.collection("users").where("referredBy", "==", downlineA.myReferralCode).get();
+                    for (const docB of levelBSnap.docs) {
+                        const downlineB = docB.data();
+                        const investedB = downlineB.totalInvested || 0;
+                        if (investedB <= 0) continue;
+
+                        const expectedBonusB = investedB * 0.03; // 3% for Level B
+
+                        const commSnapB = await db.collection("commissions")
+                            .where("userId", "==", currentUser.id)
+                            .where("fromUser", "==", downlineB.phoneNumber)
+                            .get();
+                        
+                        let actualPaidB = 0;
+                        commSnapB.forEach(c => actualPaidB += c.data().amount || 0);
+                        
+                        const isPaidB = actualPaidB >= expectedBonusB;
+                        
+                        if (!isPaidB) {
+                            const missingB = expectedBonusB - actualPaidB;
+                            breakdownB += missingB;
+                            missingBonusTotal += missingB;
+                            missingBonusRecords.push({ phone: downlineB.phoneNumber, level: 'B', amount: missingB, fromUser: downlineB.phoneNumber });
+                        }
+
+                        html += `
+                            <div class="track-card ${isPaidB ? 'paid' : 'missing'}">
+                                <div class="track-header">
+                                    <span class="track-phone"><i class="fa-solid fa-phone"></i> ${downlineB.phoneNumber}</span>
+                                    <span class="track-level" style="background:#fff3cd; color:#856404;">Level B</span>
+                                </div>
+                                <div class="track-details">
+                                    Invested: <strong>₦${investedB.toLocaleString()}</strong>
+                                </div>
+                                <div class="track-status-box">
+                                    <div>
+                                        Expected: <strong>₦${expectedBonusB.toLocaleString()}</strong><br>
+                                        Paid: <strong>₦${actualPaidB.toLocaleString()}</strong>
+                                    </div>
+                                    <span class="status-badge ${isPaidB ? 'status-paid' : 'status-missing'}">
+                                        ${isPaidB ? '✅ Paid' : '❌ Missing'}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+
+                        // ✅ LEVEL C (Referred by Level B)
+                        const levelCSnap = await db.collection("users").where("referredBy", "==", downlineB.myReferralCode).get();
+                        for (const docC of levelCSnap.docs) {
+                            const downlineC = docC.data();
+                            const investedC = downlineC.totalInvested || 0;
+                            if (investedC <= 0) continue;
+
+                            const expectedBonusC = investedC * 0.01; // 1% for Level C
+
+                            const commSnapC = await db.collection("commissions")
+                                .where("userId", "==", currentUser.id)
+                                .where("fromUser", "==", downlineC.phoneNumber)
+                                .get();
+                            
+                            let actualPaidC = 0;
+                            commSnapC.forEach(c => actualPaidC += c.data().amount || 0);
+                            
+                            const isPaidC = actualPaidC >= expectedBonusC;
+                            
+                            if (!isPaidC) {
+                                const missingC = expectedBonusC - actualPaidC;
+                                breakdownC += missingC;
+                                missingBonusTotal += missingC;
+                                missingBonusRecords.push({ phone: downlineC.phoneNumber, level: 'C', amount: missingC, fromUser: downlineC.phoneNumber });
+                            }
+
+                            html += `
+                                <div class="track-card ${isPaidC ? 'paid' : 'missing'}">
+                                    <div class="track-header">
+                                        <span class="track-phone"><i class="fa-solid fa-phone"></i> ${downlineC.phoneNumber}</span>
+                                        <span class="track-level" style="background:#e0f2fe; color:#0284c7;">Level C</span>
+                                    </div>
+                                    <div class="track-details">
+                                        Invested: <strong>₦${investedC.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="track-status-box">
+                                        <div>
+                                            Expected: <strong>₦${expectedBonusC.toLocaleString()}</strong><br>
+                                            Paid: <strong>₦${actualPaidC.toLocaleString()}</strong>
+                                        </div>
+                                        <span class="status-badge ${isPaidC ? 'status-paid' : 'status-missing'}">
+                                            ${isPaidC ? '✅ Paid' : '❌ Missing'}
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+
+                listEl.innerHTML = html;
+                
+                // Update Payout Tab
+                document.getElementById('missingBonusTotal').innerText = `₦${missingBonusTotal.toLocaleString()}`;
+                document.getElementById('levelAExpected').innerText = `₦${breakdownA.toLocaleString()}`;
+                document.getElementById('levelBExpected').innerText = `₦${breakdownB.toLocaleString()}`;
+                document.getElementById('levelCExpected').innerText = `₦${breakdownC.toLocaleString()}`;
+
+                // Show Credit button if there's a missing bonus
+                if (missingBonusTotal > 0) {
+                    document.getElementById('creditBtn').style.display = 'flex';
+                } else {
+                    document.getElementById('creditBtn').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error("Error loading downlines:", error);
+                listEl.innerHTML = '<div class="no-data" style="color:var(--danger);">Failed to load downlines.</div>';
+            }
+        }
+
+        // ✅ CREDIT MISSING BONUS TO WALLET
+        async function creditMissingBonus() {
+            if (missingBonusTotal <= 0) return showToast("No missing bonus to credit.", true);
+
+            if (!confirm(`Are you sure you want to credit ₦${missingBonusTotal.toLocaleString()} to ${currentUser.phoneNumber}'s withdrawal wallet?`)) return;
+
+            const btn = document.getElementById('creditBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const batch = db.batch();
+                const userRef = db.collection("users").doc(currentUser.id);
+
+                // 1. Credit the wallet
+                batch.update(userRef, {
+                    "withdrawalWallet": firebase.firestore.FieldValue.increment(missingBonusTotal)
+                });
+
+                // 2. Create commission records for each missing bonus
+                for (const record of missingBonusRecords) {
+                    const commRef = db.collection("commissions").doc();
+                    batch.set(commRef, {
+                        userId: currentUser.id,
+                        fromUser: record.fromUser,
+                        amount: record.amount,
+                        level: record.level,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+
+                await batch.commit();
+
+                showToast(`✅ Credited ₦${missingBonusTotal.toLocaleString()} successfully!`, true);
+                
+                // Refresh
+                setTimeout(() => {
+                    searchUser();
+                }, 1500);
+
+            } catch (error) {
+                console.error("Credit error:", error);
+                showToast("Failed to credit bonus.", true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plus-circle"></i> Credit to Wallet';
+            }
+        }
+
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = "admin-login.html";
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
