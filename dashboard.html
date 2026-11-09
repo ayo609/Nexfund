@@ -284,6 +284,7 @@ const OFFICIAL_TG_LINK = 'https://t.me/+zY-KjY5Rul8yNTk8';
 const VIP_TG_LINK = 'https://t.me/your_vip_telegram_link'; // ⚠️ Replace with your actual VIP link
 
 let currentUserData = null, firestoreProducts = [], globalSoldCounts = {}, currentCategory = 'ordinary', buying = false;
+let userMaxPurchasePrice = 0; // ✅ Tracks the highest price the user has ever bought
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -343,7 +344,6 @@ async function loadFirestoreProducts() {
     firestoreProducts = [];
     snap.forEach(doc => {
       const data = doc.data();
-      // Override limit to 5 for Firestore products too
       firestoreProducts.push({ id: doc.id, ...data, limit: 5 });
     });
   } catch (e) { console.error("Failed to load products:", e); firestoreProducts = []; }
@@ -359,6 +359,25 @@ async function computeGlobalSoldCounts() {
     });
   } catch (e) { console.error("Failed to compute sold counts:", e); }
   globalSoldCounts = counts;
+}
+
+// ✅ CALCULATE USER'S HIGHEST PURCHASED PRICE
+function calculateMaxPurchasePrice(userData) {
+  if (!userData || !userData.purchasedProducts) return 0;
+  
+  let maxPrice = 0;
+  const bought = userData.purchasedProducts;
+  const allProds = getAllProducts();
+  
+  for (const [pid, count] of Object.entries(bought)) {
+    if (count <= 0) continue;
+    const product = allProds.find(p => p.id === pid);
+    if (product && product.price > maxPrice) {
+      maxPrice = product.price;
+    }
+  }
+  
+  return maxPrice;
 }
 
 async function evaluateCheckInStatus(uid, userData) {
@@ -429,16 +448,33 @@ function renderProductsForTab() {
     const isSoldOut = sold >= PRODUCT_SLOTS;
     const pct = Math.min(Math.round(sold / PRODUCT_SLOTS * 100), 100);
     const bought = (currentUserData && currentUserData.purchasedProducts && currentUserData.purchasedProducts[product.id]) || 0;
-    const limit = 5; // ✅ Force 5 purchases for all
+    const limit = 5;
     const limitReached = bought >= limit;
-    const label = isSoldOut ? 'Sold Out' : limitReached ? 'Bought' : 'Buy';
+    
+    // ✅ CHECK IF USER HAS PURCHASED A HIGHER-PRICED PRODUCT (Downgrade Lock)
+    const isDowngrade = userMaxPurchasePrice > 0 && product.price < userMaxPurchasePrice;
+    
+    let label = 'Buy';
+    if (isSoldOut) label = 'Sold Out';
+    else if (limitReached) label = 'Bought';
+    else if (isDowngrade) label = 'Locked';
+    
+    const disabled = limitReached || isSoldOut || isDowngrade;
+    
     const price = (product.price || 0).toLocaleString();
     const ret = (product.totalReturn || 0).toLocaleString();
     const dur = product.duration || 0;
     const days = `Day${dur === 1 ? '' : 's'}`;
     const name = esc(product.name || 'Unnamed Product');
+    
+    const downgradeWarning = isDowngrade && !limitReached && !isSoldOut 
+      ? `<div style="background:#fff3cd; color:#856404; padding:8px 12px; border-radius:10px; font-size:11px; margin-top:8px; font-weight:600;">
+           🔒 You can only buy this product or higher. You already purchased a higher plan.
+         </div>` 
+      : '';
+    
     return `
-    <div class="product-card">
+    <div class="product-card" style="${isDowngrade ? 'opacity:0.7;' : ''}">
       <div class="product-header">
         <div class="product-img"><img src="logo.png" alt="${name}"></div>
         <div class="product-info">
@@ -452,11 +488,12 @@ function renderProductsForTab() {
             <span>Capital + profit at cycle end:</span>
             <span class="capital-return">₦${ret}</span>
           </div>
-          <button class="buy-btn" onclick="buyProduct('${esc(product.id)}')" ${(limitReached || isSoldOut) ? 'disabled' : ''}>${label}</button>
+          <button class="buy-btn" onclick="buyProduct('${esc(product.id)}')" ${disabled ? 'disabled' : ''}>${label}</button>
           <div style="clear:both"></div>
         </div>
       </div>
       <div class="limit-badge">Purchase limit: ${limit} times · Bought ${bought}/${limit}</div>
+      ${downgradeWarning}
       <div class="product-stats">
         <div class="stat-item"><div class="stat-val">${bought}</div><div class="stat-lbl">Purchased</div></div>
         <div class="stat-item"><div class="stat-val">${dur}</div><div class="stat-lbl">${days}</div></div>
@@ -481,7 +518,10 @@ async function loadUserAndRenderProducts() {
   document.getElementById('productsContainer').innerHTML = '<p class="loading-text">Loading projects...</p>';
   if (auth.currentUser) {
     const userDoc = await db.collection("users").doc(auth.currentUser.uid).get();
-    if (userDoc.exists) currentUserData = userDoc.data();
+    if (userDoc.exists) {
+      currentUserData = userDoc.data();
+      userMaxPurchasePrice = calculateMaxPurchasePrice(currentUserData);
+    }
   }
   await Promise.all([loadFirestoreProducts(), computeGlobalSoldCounts()]);
   renderProductsForTab();
@@ -490,7 +530,8 @@ async function loadUserAndRenderProducts() {
     else renderCheckInCard({ state:'NO_PRODUCT', claimsUsed:0, cap:0 });
   } catch (e) { console.error(e); renderCheckInCard({ state:'NO_PRODUCT', claimsUsed:0, cap:0 }); }
 }
-
+</script>
+<script>
 async function buyProduct(productId) {
   if (buying) return;
   if (!currentUserData) return showModal({ type:'error', title:'Account not ready', message:'Your account data has not loaded yet. Please refresh the page.' });
@@ -502,6 +543,16 @@ async function buyProduct(productId) {
   const alreadyBought = (currentUserData.purchasedProducts && currentUserData.purchasedProducts[productId]) || 0;
   if (alreadyBought >= 5) {
     return showModal({ type:'warn', title:'Limit Reached', message:`You have already purchased ${product.name} 5 times. You cannot buy it again.`, confirmText:'OK' });
+  }
+
+  // ✅ CHECK DOWNGRADE: User can't buy cheaper than their highest purchase
+  if (userMaxPurchasePrice > 0 && product.price < userMaxPurchasePrice) {
+    return showModal({ 
+      type:'warn', 
+      title:'Downgrade Not Allowed', 
+      message:`You already purchased a higher-priced product. You can only buy products priced ₦${userMaxPurchasePrice.toLocaleString()} or higher.`, 
+      confirmText:'Got it' 
+    });
   }
 
   const price = product.price || 0, balance = currentUserData.depositWallet || 0;
@@ -528,7 +579,7 @@ async function buyProduct(productId) {
     batch.update(userRef, {
       "depositWallet": firebase.firestore.FieldValue.increment(-price),
       [`purchasedProducts.${productId}`]: firebase.firestore.FieldValue.increment(1),
-      "totalInvested": firebase.firestore.FieldValue.increment(price) // ✅ Track total investment for Team Page
+      "totalInvested": firebase.firestore.FieldValue.increment(price) // ✅ Track total investment
     });
 
     const expiryDate = new Date();
@@ -539,7 +590,7 @@ async function buyProduct(productId) {
       purchaseDate: firebase.firestore.FieldValue.serverTimestamp(), expiryDate
     });
 
-    // ALWAYS CREDIT UPLINES ON EVERY PURCHASE
+    // ✅ ALWAYS CREDIT UPLINES ON EVERY PURCHASE
     const credited = [];
     const creditUpline = async (level, refCode, bonus) => {
       if (!refCode || refCode === "DIRECT") return;
@@ -566,9 +617,10 @@ async function buyProduct(productId) {
     await batch.commit();
 
     const rows = [['Product', product.name || 'Product'], ['Amount paid', money(price)], ['Return at cycle end', money(ret)], ...credited];
+    const remaining = 4 - alreadyBought;
     const msg = credited.length
-      ? `${product.name} is now active. Referral bonus has been sent to your upline.`
-      : `${product.name} is now active. You have ${4 - alreadyBought} purchase${(4 - alreadyBought) === 1 ? '' : 's'} left for this product.`;
+      ? `${product.name} is now active. Referral bonus sent to upline. ${remaining > 0 ? `You have ${remaining} purchase${remaining === 1 ? '' : 's'} left.` : ''}`
+      : `${product.name} is now active. ${remaining > 0 ? `You have ${remaining} purchase${remaining === 1 ? '' : 's'} left.` : ''}`;
     showModal({ type:'success', title:'Purchase successful', message:msg, rows, confirmText:'Done' }).then(() => loadUserAndRenderProducts());
   } catch (e) {
     console.error("Purchase Error:", e);
