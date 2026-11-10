@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Date Corrector (NO PAYOUTS)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f6fc; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        .btn { background: #00a896; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; margin-bottom: 15px;}
+        .btn:disabled { background: #ccc; }
+        .log-box { background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 8px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .warning { color: #f1fa8c; }
+        .success { color: #50fa7b; }
+        .error { color: #ff5555; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🛡️ Safe Date Corrector (No Payouts)</h2>
+        <p style="font-size: 14px; color: #555;">This will fix dates and hide expired products <b>without crediting any wallets</b>. Expired products are marked as "expired_unpaid" so the dashboard skips them.</p>
+        
+        <button class="btn" id="fixBtn" onclick="runPerfectFix()">Run Safe Fix</button>
+        
+        <div class="log-box" id="logBox">Waiting to start...</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0", 
+            authDomain: "nexfund-38027.firebaseapp.com", 
+            projectId: "nexfund-38027", 
+            storageBucket: "nexfund-38027.firebasestorage.app", 
+            messagingSenderId: "318202194753", 
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0" 
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function log(message, type = '') {
+            const box = document.getElementById('logBox');
+            if (box.innerHTML === 'Waiting to start...') box.innerHTML = '';
+            box.innerHTML += `<div class="${type}">> ${message}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function runPerfectFix() {
+            if(!confirm("This will adjust the dates of restored investments safely. NO money will be credited. Proceed?")) return;
+            
+            const btn = document.getElementById('fixBtn');
+            btn.disabled = true;
+            btn.innerText = "Processing... Do not close this page.";
+            document.getElementById('logBox').innerHTML = '';
+
+            log("Fetching all users to get their signup dates...", 'warning');
+            const usersSnap = await db.collection("users").get();
+            const userSignupDates = {};
+            usersSnap.forEach(doc => {
+                const data = doc.data();
+                const createdAt = data.createdAt ? data.createdAt.toDate() : new Date();
+                userSignupDates[doc.id] = createdAt;
+            });
+
+            log("Fetching all RESTORED investments...", 'warning');
+            const invSnap = await db.collection("investments").where("restoredByAdmin", "==", true).get();
+            
+            if (invSnap.empty) {
+                log("No restored investments found.", 'success');
+                btn.disabled = false;
+                btn.innerText = "Run Safe Fix";
+                return;
+            }
+
+            let completedCount = 0;
+            let activeCount = 0;
+            const now = new Date();
+
+            for (const invDoc of invSnap.docs) {
+                const inv = invDoc.data();
+                const userId = inv.userId;
+                const duration = inv.duration || 0;
+                
+                const signupDate = userSignupDates[userId];
+                if (!signupDate) {
+                    log(`User not found for investment ${invDoc.id}. Skipping.`, 'error');
+                    continue;
+                }
+
+                // Calculate the EXACT expiry date based on signup
+                const correctExpiry = new Date(signupDate);
+                correctExpiry.setDate(correctExpiry.getDate() + duration);
+
+                const batch = db.batch();
+                const invRef = db.collection("investments").doc(invDoc.id);
+
+                if (now > correctExpiry) {
+                    // ❌ IT IS EXPIRED: Mark as 'expired_unpaid' so no wallet is credited
+                    batch.update(invRef, {
+                        status: 'expired_unpaid', 
+                        expiryDate: firebase.firestore.Timestamp.fromDate(correctExpiry),
+                        purchaseDate: firebase.firestore.Timestamp.fromDate(signupDate)
+                    });
+                    await batch.commit();
+                    completedCount++;
+                } else {
+                    // ✅ IT IS STILL ACTIVE: Update the correct dates
+                    batch.update(invRef, {
+                        status: 'active',
+                        expiryDate: firebase.firestore.Timestamp.fromDate(correctExpiry),
+                        purchaseDate: firebase.firestore.Timestamp.fromDate(signupDate)
+                    });
+                    await batch.commit();
+                    activeCount++;
+                }
+            }
+
+            log(`\n--- SAFE FIX COMPLETE ---`, 'success');
+            log(`Marked as Expired (No Payout): ${completedCount}`, 'error');
+            log(`Kept Active (Correct Dates): ${activeCount}`, 'success');
+            log(`Wallet balances were NOT touched.`, 'warning');
+            
+            btn.disabled = false;
+            btn.innerText = "Run Safe Fix";
+        }
+    </script>
+</body>
+</html>
