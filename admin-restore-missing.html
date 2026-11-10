@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restore Missing Investments</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f6fc; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .btn { background: #00a896; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 15px; font-weight: bold;}
+        .btn:disabled { background: #ccc; }
+        .log-box { background: #222; color: #00ff00; padding: 15px; border-radius: 8px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .error { color: #ff5555; }
+        .warning { color: #f1fa8c; }
+        .success { color: #50fa7b; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🛠️ Restore Missing Investments</h2>
+        <p style="font-size: 14px; color: #555;">This will find users who bought products but have no investment records, and safely recreate them. It calculates expiry based on the user's signup date to avoid giving fake active cycles.</p>
+        
+        <button class="btn" id="restoreBtn" onclick="restoreMissing()">Run Safe Restore</button>
+        
+        <div class="log-box" id="logBox">Waiting to start...</div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- PASTE YOUR FIREBASE CONFIG HERE ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0", 
+            authDomain: "nexfund-38027.firebaseapp.com", 
+            projectId: "nexfund-38027", 
+            storageBucket: "nexfund-38027.firebasestorage.app", 
+            messagingSenderId: "318202194753", 
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0" 
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Your product data (Ensure this matches your app exactly)
+        const PRODUCTS = {
+            p1: { name: 'Nexfund A', duration: 2,  price: 6000,  totalReturn: 8400 },
+            p2: { name: 'Nexfund B', duration: 5,  price: 13000, totalReturn: 18850 },
+            p3: { name: 'Nexfund C', duration: 10, price: 24000, totalReturn: 35500 },
+            p4: { name: 'Nexfund D', duration: 20, price: 42000, totalReturn: 63000 },
+            p5: { name: 'Nexfund E', duration: 30, price: 65000, totalReturn: 129350 },
+            p6: { name: 'Nexfund F', duration: 40, price: 95000, totalReturn: 209000 }
+        };
+
+        function log(message, type = '') {
+            const box = document.getElementById('logBox');
+            if (box.innerHTML === 'Waiting to start...') box.innerHTML = '';
+            box.innerHTML += `<div class="${type}">> ${message}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function restoreMissing() {
+            if(!confirm("This will create missing investment records. Proceed?")) return;
+            
+            const btn = document.getElementById('restoreBtn');
+            btn.disabled = true;
+            btn.innerText = "Processing... Do not close this page.";
+            document.getElementById('logBox').innerHTML = '';
+
+            const usersSnap = await db.collection("users").get();
+            const invSnap = await db.collection("investments").get();
+            
+            // Get list of userIds that already have investments
+            const usersWithInvestments = new Set();
+            invSnap.forEach(doc => {
+                if(doc.data().userId) usersWithInvestments.add(doc.data().userId);
+            });
+
+            let restoredUsers = 0;
+            let totalInvestmentsCreated = 0;
+
+            for (const userDoc of usersSnap.docs) {
+                const userData = userDoc.data();
+                const userId = userDoc.id;
+                const phone = userData.phoneNumber || 'Unknown';
+
+                // Skip if user already has investments
+                if (usersWithInvestments.has(userId)) continue;
+
+                const purchased = userData.purchasedProducts || {};
+                const totalPurchased = Object.values(purchased).reduce((sum, c) => sum + (Number(c) || 0), 0);
+                
+                // Skip if they didn't buy anything
+                if (totalPurchased === 0) continue;
+
+                log(`Found missing records for: ${phone}`, 'warning');
+
+                // Determine signup date to calculate accurate expiry
+                const createdAt = userData.createdAt ? userData.createdAt.toDate() : new Date();
+                
+                const batch = db.batch();
+                let createdForThisUser = 0;
+
+                for (const [pid, count] of Object.entries(purchased)) {
+                    const product = PRODUCTS[pid];
+                    if (!product || count <= 0) continue;
+
+                    for (let i = 0; i < count; i++) {
+                        // Calculate expiry based on when they signed up
+                        const expiryDate = new Date(createdAt);
+                        expiryDate.setDate(expiryDate.getDate() + product.duration);
+                        
+                        // Check if it's already expired
+                        const isExpired = expiryDate < new Date();
+
+                        const newInvRef = db.collection("investments").doc();
+                        batch.set(newInvRef, {
+                            userId: userId,
+                            productId: pid,
+                            productName: product.name,
+                            amount: product.price,
+                            duration: product.duration,
+                            expectedReturn: product.totalReturn,
+                            status: isExpired ? 'completed' : 'active', // Mark as completed if time is up
+                            purchaseDate: firebase.firestore.Timestamp.fromDate(createdAt),
+                            expiryDate: firebase.firestore.Timestamp.fromDate(expiryDate),
+                            restoredByAdmin: true
+                        });
+                        createdForThisUser++;
+                    }
+                }
+
+                if (createdForThisUser > 0) {
+                    await batch.commit();
+                    log(`✅ Restored ${createdForThisUser} products for ${phone}`, 'success');
+                    restoredUsers++;
+                    totalInvestmentsCreated += createdForThisUser;
+                }
+            }
+
+            log(`\n--- RESTORE COMPLETE ---`, 'success');
+            log(`Users Fixed: ${restoredUsers}`);
+            log(`Total Investments Created: ${totalInvestmentsCreated}`, 'success');
+            log(`Ask the users to refresh their dashboards!`, 'warning');
+            
+            btn.disabled = false;
+            btn.innerText = "Run Safe Restore";
+        }
+    </script>
+</body>
+</html>
