@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Scan - Dashboard Fixer</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f6fc; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .btn { background: #1d3bba; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 15px;}
+        .btn:disabled { background: #ccc; }
+        .log-box { background: #222; color: #00ff00; padding: 15px; border-radius: 8px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .error { color: #ff5555; }
+        .warning { color: #f1fa8c; }
+        .success { color: #50fa7b; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🕵️‍♂️ Deep Scan (Diagnostic Mode)</h2>
+        <p style="font-size: 14px; color: #555;">This will scan every investment. It will <b>NOT</b> create new investments. It will check if dates are broken, if status is capitalized wrong, or if product IDs are missing. It will print the exact reason why the dashboard is hiding the product.</p>
+        
+        <button class="btn" id="scanBtn" onclick="startDeepScan()">Start Deep Scan</button>
+        
+        <div class="log-box" id="logBox">Waiting to start...</div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- PASTE YOUR FIREBASE CONFIG HERE ---
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0", 
+            authDomain: "nexfund-38027.firebaseapp.com", 
+            projectId: "nexfund-38027", 
+            storageBucket: "nexfund-38027.firebasestorage.app", 
+            messagingSenderId: "318202194753", 
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0" 
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function log(message, type = '') {
+            const box = document.getElementById('logBox');
+            if (box.innerHTML === 'Waiting to start...') box.innerHTML = '';
+            box.innerHTML += `<div class="${type}">> ${message}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function startDeepScan() {
+            const btn = document.getElementById('scanBtn');
+            btn.disabled = true;
+            btn.innerText = "Scanning... Please wait.";
+            document.getElementById('logBox').innerHTML = '';
+
+            log("Fetching all users...");
+            const usersSnap = await db.collection("users").get();
+            log(`Found ${usersSnap.size} users in database.`);
+
+            log("Fetching all investments...");
+            const invSnap = await db.collection("investments").get();
+            log(`Found ${invSnap.size} total investments.`, 'warning');
+
+            // Create a map of all investments by userId to speed up the scan
+            const investmentsByUser = {};
+            invSnap.forEach(doc => {
+                const data = doc.data();
+                if (!data.userId) {
+                    log(`CRITICAL: Investment ${doc.id} has NO userId!`, 'error');
+                    return;
+                }
+                if (!investmentsByUser[data.userId]) investmentsByUser[data.userId] = [];
+                investmentsByUser[data.userId].push({ id: doc.id, ...data });
+            });
+
+            let issueCount = 0;
+            let fixedCount = 0;
+
+            // Now check every user
+            for (const userDoc of usersSnap.docs) {
+                const userData = userDoc.data();
+                const userId = userDoc.id;
+                const phone = userData.phoneNumber || 'No Phone';
+                const purchased = userData.purchasedProducts || {};
+                const userInvs = investmentsByUser[userId] || [];
+
+                // Does the user have purchased products but NO investments?
+                const totalPurchased = Object.values(purchased).reduce((sum, c) => sum + (Number(c) || 0), 0);
+                
+                if (totalPurchased > 0 && userInvs.length === 0) {
+                    log(`❌ User ${phone} bought products but has ZERO investments in the database.`, 'error');
+                    issueCount++;
+                    continue;
+                }
+
+                if (userInvs.length === 0) continue;
+
+                // Check the investments for this user
+                for (let inv of userInvs) {
+                    let needsUpdate = false;
+                    let updateData = {};
+
+                    // 1. Check Status
+                    if (inv.status !== 'active') {
+                        log(`⚠️ User ${phone}: Investment ${inv.id} has status: "${inv.status}". Fixing to "active".`, 'warning');
+                        updateData.status = 'active';
+                        needsUpdate = true;
+                    }
+
+                    // 2. Check Dates (Is it missing or a string instead of a Timestamp?)
+                    if (!inv.expiryDate || !inv.expiryDate.toDate) {
+                        log(`⚠️ User ${phone}: Investment ${inv.id} has an INVALID expiryDate. Dashboard cannot read it.`, 'warning');
+                        // We cannot easily guess the original date here, so we just log it so you know.
+                    } else {
+                        const expDate = inv.expiryDate.toDate();
+                        if (expDate < new Date() && inv.status === 'active') {
+                            log(`⚠️ User ${phone}: Investment ${inv.id} is set to active but EXPIRED on ${expDate.toDateString()}. Dashboard will hide it.`, 'warning');
+                        }
+                    }
+
+                    // 3. Check Product ID
+                    if (!inv.productId) {
+                        log(`⚠️ User ${phone}: Investment ${inv.id} is missing productId.`, 'error');
+                    }
+
+                    // Execute Fixes
+                    if (needsUpdate) {
+                        await db.collection("investments").doc(inv.id).update(updateData);
+                        fixedCount++;
+                        log(`✅ Fixed investment ${inv.id} for ${phone}.`, 'success');
+                    }
+                }
+            }
+
+            log(`\n--- SCAN COMPLETE ---`, 'success');
+            log(`Total Users Scanned: ${usersSnap.size}`);
+            log(`Total Issues Found: ${issueCount}`);
+            log(`Total Automatically Fixed: ${fixedCount}`, 'success');
+            
+            btn.disabled = false;
+            btn.innerText = "Start Deep Scan";
+        }
+    </script>
+</body>
+</html>
