@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - Deposit Approvals</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --dark-blue: #16285c;
+            --light-bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --purple: #8b5cf6;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        .admin-header {
+            background: var(--dark-blue);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .admin-brand i { color: #4facfe; }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ✅ NEW: SEARCH BOX */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px; top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 15px 45px 15px 45px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .search-box input:focus { border-color: var(--primary-blue); }
+        .search-clear {
+            position: absolute;
+            right: 15px; top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+        .search-clear:hover { color: var(--danger); }
+
+        /* --- TEAM DEPOSIT CARD --- */
+        .team-deposit-card {
+            background: linear-gradient(135deg, #1d3bba 0%, #3b5bdb 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(29, 59, 186, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .team-deposit-card::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        .team-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .team-amount {
+            font-size: 26px;
+            font-weight: 800;
+        }
+        .team-icon {
+            width: 50px; height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 22px;
+            z-index: 1;
+        }
+
+        .tabs {
+            display: flex;
+            background: #fff;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-gray);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .action-bar {
+            display: none;
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #eef2ff;
+        }
+        .action-bar span { font-size: 13px; font-weight: 600; color: var(--primary-blue); }
+        .btn-delete-bulk {
+            background: #fadbd8; color: #b91c1c;
+            padding: 8px 15px; border-radius: 8px;
+            border: none; font-size: 12px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 5px;
+        }
+        .list-header h3 { font-size: 15px; color: var(--text-dark); }
+        .select-all { font-size: 12px; color: var(--primary-blue); cursor: pointer; font-weight: 600; }
+
+        .deposit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .dep-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border-left: 4px solid var(--warning);
+        }
+        .dep-card.approved { border-left-color: var(--success); }
+        .dep-card.rejected { border-left-color: var(--danger); }
+
+        .dep-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 12px;
+        }
+        .dep-user { display: flex; align-items: center; gap: 10px; }
+        .dep-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-blue); }
+        .dep-phone { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .dep-date { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+        
+        .dep-amount { font-size: 20px; font-weight: 800; color: var(--purple); text-align: right; }
+        .dep-status { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 10px; display: inline-block; margin-top: 5px; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-success { background: #e8f8f5; color: var(--success); }
+        .status-rejected { background: #fadbd8; color: var(--danger); }
+
+        .dep-details { margin-bottom: 15px; }
+        .dep-details p { font-size: 13px; color: var(--text-gray); margin-bottom: 5px; }
+        .dep-details strong { color: var(--text-dark); }
+
+        .receipt-btn {
+            width: 100%; background: #f8fafc; color: var(--primary-blue);
+            border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
+            display: flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .receipt-btn:active { background: #eef2ff; }
+
+        .dep-actions { display: flex; gap: 10px; }
+        .dep-actions button {
+            flex: 1; padding: 10px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+            display: flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .btn-approve { background: var(--success); color: white; }
+        .btn-reject { background: #fff; color: var(--danger); border: 1px solid var(--danger); }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px; color: var(--text-gray);
+            background: #fff; border-radius: 15px; font-size: 14px;
+        }
+
+        .image-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: 0.3s;
+            padding: 20px;
+        }
+        .image-modal.active { opacity: 1; visibility: visible; }
+        .image-modal img {
+            max-width: 100%; max-height: 80vh;
+            border-radius: 10px;
+        }
+        .close-image {
+            position: absolute; top: 20px; right: 20px;
+            background: #fff; border: none; width: 40px; height: 40px;
+            border-radius: 50%; font-size: 18px; cursor: pointer;
+        }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 10px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(0, 168, 150, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.error { background: rgba(231, 76, 60, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        #loadingScreen { position: fixed; inset: 0; background: var(--light-bg); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        <div style="color: var(--primary-blue); font-weight: 600; font-size: 14px;">Loading Deposits...</div>
+    </div>
+
+    <div class="admin-header">
+        <div class="admin-brand">
+            <i class="fa-solid fa-money-bill-wave"></i>
+            Deposit Approvals
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-power-off"></i> Logout
+        </button>
+    </div>
+
+    <div class="content">
+
+        <!-- ✅ NEW: SEARCH BOX -->
+        <div class="search-box">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search by phone number or sender name..." oninput="handleSearch()">
+            <i class="fa-solid fa-circle-xmark search-clear" id="clearSearch" onclick="clearSearch()"></i>
+        </div>
+
+        <!-- TEAM DEPOSIT CARD -->
+        <div class="team-deposit-card">
+            <div>
+                <div class="team-label">Total Team Deposits</div>
+                <div class="team-amount" id="teamDepositTotal">₦0</div>
+            </div>
+            <div class="team-icon"><i class="fa-solid fa-users"></i></div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" id="tab-pending" onclick="switchTab('pending')">Pending</div>
+            <div class="tab" id="tab-history" onclick="switchTab('history')">History</div>
+        </div>
+
+        <div class="action-bar" id="actionBar">
+            <span id="selectedCount">0 selected</span>
+            <button class="btn-delete-bulk" onclick="deleteSelected()"><i class="fa-solid fa-trash"></i> Delete Records</button>
+        </div>
+
+        <div class="list-header" id="listHeader">
+            <h3 id="listTitle">Pending Deposits</h3>
+            <div class="select-all" onclick="selectAll()" id="selectAllBtn">Select All</div>
+        </div>
+
+        <div class="deposit-list" id="depositList">
+            <div class="empty-state">Loading...</div>
+        </div>
+
+    </div>
+
+    <div class="image-modal" id="imageModal" onclick="closeImage()">
+        <button class="close-image"><i class="fa-solid fa-xmark"></i></button>
+        <img id="modalImage" src="" alt="Receipt">
+    </div>
+
+    <div class="bottom-nav">
+        <a href="admin-dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="admin-users.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Users</span></a>
+        <a href="admin-withdrawals.html" class="nav-item"><i class="fa-solid fa-money-bill-transfer"></i><span>Payouts</span></a>
+        <a href="admin-products.html" class="nav-item"><i class="fa-solid fa-box"></i><span>Products</span></a>
+        <a href="admin-settings.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentTab = 'pending';
+        let loadedDeposits = [];
+        let userPhoneCache = {};
+        let currentSearchQuery = ''; // ✅ Track search query
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const doc = await db.collection("users").doc(user.uid).get();
+                if (doc.exists && doc.data().isAdmin === true && doc.data().role === "admin") {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    await loadTeamTotal();
+                    loadDeposits();
+                } else {
+                    await auth.signOut();
+                    window.location.href = "admin-login.html";
+                }
+            } else {
+                window.location.href = "admin-login.html";
+            }
+        });
+
+        // ✅ FETCH TOTAL TEAM DEPOSITS
+        async function loadTeamTotal() {
+            try {
+                const snap = await db.collection("transactions")
+                    .where("type", "==", "deposit")
+                    .where("status", "==", "success")
+                    .get();
+                
+                let total = 0;
+                snap.forEach(doc => {
+                    total += doc.data().amount || 0;
+                });
+                
+                document.getElementById('teamDepositTotal').innerText = `₦${total.toLocaleString()}`;
+            } catch (err) {
+                console.error("Error loading team total:", err);
+                try {
+                    const allSnap = await db.collection("transactions").where("type", "==", "deposit").get();
+                    let total = 0;
+                    allSnap.forEach(doc => {
+                        if (doc.data().status === 'success' || doc.data().status === 'approved') {
+                            total += doc.data().amount || 0;
+                        }
+                    });
+                    document.getElementById('teamDepositTotal').innerText = `₦${total.toLocaleString()}`;
+                } catch (fallbackErr) {
+                    console.error("Fallback error:", fallbackErr);
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-pending').classList.toggle('active', tab === 'pending');
+            document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+            
+            document.getElementById('listTitle').innerText = tab === 'pending' ? 'Pending Deposits' : 'History';
+            document.getElementById('actionBar').style.display = 'none';
+            
+            loadDeposits();
+        }
+
+        async function loadDeposits() {
+            const listEl = document.getElementById('depositList');
+            listEl.innerHTML = `<div class="empty-state">Loading...</div>`;
+
+            try {
+                const snap = await db.collection("transactions").where("type", "==", "deposit").get();
+                loadedDeposits = [];
+                
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    
+                    if (currentTab === 'pending' && data.status !== 'pending') return;
+                    if (currentTab === 'history' && (data.status === 'pending' || !data.status)) return;
+                    
+                    loadedDeposits.push({ id: doc.id, ...data });
+                });
+
+                loadedDeposits.sort((a, b) => {
+                    const tA = a.timestamp ? (a.timestamp.toMillis ? a.timestamp.toMillis() : 0) : 0;
+                    const tB = b.timestamp ? (b.timestamp.toMillis ? b.timestamp.toMillis() : 0) : 0;
+                    return tB - tA;
+                });
+
+                const userIds = [...new Set(loadedDeposits.map(d => d.userId || d.uid).filter(Boolean))];
+                for (const uid of userIds) {
+                    if (!userPhoneCache[uid]) {
+                        try {
+                            const userDoc = await db.collection("users").doc(uid).get();
+                            if (userDoc.exists) {
+                                userPhoneCache[uid] = userDoc.data().phoneNumber || 'Unknown';
+                            }
+                        } catch (e) {
+                            console.error("Error fetching user:", e);
+                        }
+                    }
+                }
+
+                renderDeposits();
+
+            } catch (error) {
+                console.error("Error loading deposits:", error);
+                listEl.innerHTML = `<div class="empty-state">Failed to load deposits. Please try again.</div>`;
+            }
+        }
+
+        // ✅ NEW: HANDLE SEARCH
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            currentSearchQuery = query;
+            
+            // Show/Hide clear button
+            document.getElementById('clearSearch').style.display = query ? 'block' : 'none';
+            
+            renderDeposits();
+        }
+
+        // ✅ NEW: CLEAR SEARCH
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            currentSearchQuery = '';
+            document.getElementById('clearSearch').style.display = 'none';
+            renderDeposits();
+        }
+
+        function renderDeposits() {
+            const listEl = document.getElementById('depositList');
+            
+            // ✅ FILTER BASED ON SEARCH
+            let filtered = loadedDeposits;
+            if (currentSearchQuery) {
+                filtered = loadedDeposits.filter(dep => {
+                    const userId = dep.userId || dep.uid;
+                    const displayPhone = dep.phoneNumber || userPhoneCache[userId] || '';
+                    const senderName = dep.senderName || '';
+                    
+                    return displayPhone.toLowerCase().includes(currentSearchQuery) || 
+                           senderName.toLowerCase().includes(currentSearchQuery);
+                });
+            }
+
+            if (filtered.length === 0) {
+                if (currentSearchQuery) {
+                    listEl.innerHTML = `<div class="empty-state">No deposits found for "<strong>${currentSearchQuery}</strong>" in ${currentTab}.</div>`;
+                } else {
+                    listEl.innerHTML = `<div class="empty-state">No ${currentTab} deposits found.</div>`;
+                }
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(dep => {
+                const date = dep.timestamp ? (dep.timestamp.toDate ? dep.timestamp.toDate() : new Date(dep.timestamp)) : new Date();
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                const userId = dep.userId || dep.uid;
+                const displayPhone = dep.phoneNumber || userPhoneCache[userId] || 'Unknown User';
+                
+                let statusClass = 'status-pending';
+                let cardClass = '';
+                if (dep.status === 'success' || dep.status === 'approved') {
+                    statusClass = 'status-success';
+                    cardClass = 'approved';
+                } else if (dep.status === 'rejected') {
+                    statusClass = 'status-rejected';
+                    cardClass = 'rejected';
+                }
+
+                const actionButtons = currentTab === 'pending' ? `
+                    <div class="dep-actions">
+                        <button class="btn-approve" onclick="processDeposit('${dep.id}', 'success')">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button class="btn-reject" onclick="processDeposit('${dep.id}', 'rejected')">
+                            <i class="fa-solid fa-xmark"></i> Reject
+                        </button>
+                    </div>
+                ` : '';
+
+                const checkbox = currentTab === 'pending' ? `
+                    <input type="checkbox" class="dep-checkbox" value="${dep.id}" onchange="updateActionBar()">
+                ` : '';
+
+                return `
+                    <div class="dep-card ${cardClass}">
+                        <div class="dep-top">
+                            <div class="dep-user">
+                                ${checkbox}
+                                <div>
+                                    <div class="dep-phone">${displayPhone}</div>
+                                    <div class="dep-date">${dateStr}</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="dep-amount">₦${(dep.amount || 0).toLocaleString()}</div>
+                                <div class="dep-status ${statusClass}">${dep.status}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="dep-details">
+                            <p>Sender Name: <strong>${dep.senderName || 'N/A'}</strong></p>
+                        </div>
+
+                        <button class="receipt-btn" onclick="viewReceipt('${dep.id}')">
+                            <i class="fa-solid fa-image"></i> View Payment Receipt
+                        </button>
+
+                        ${actionButtons}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewReceipt(txId) {
+            const dep = loadedDeposits.find(d => d.id === txId);
+            if (dep && dep.receiptImage) {
+                document.getElementById('modalImage').src = dep.receiptImage;
+                document.getElementById('imageModal').classList.add('active');
+            } else {
+                showToast("No image uploaded for this deposit.", true);
+            }
+        }
+
+        function closeImage() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        async function processDeposit(txId, newStatus) {
+            const dep = loadedDeposits.find(d => d.id === txId);
+            if (!dep) return;
+
+            const actionWord = newStatus === 'success' ? 'APPROVE' : 'REJECT';
+            if (!confirm(`Are you sure you want to ${actionWord} this deposit of ₦${dep.amount.toLocaleString()}?`)) return;
+
+            try {
+                const batch = db.batch();
+                const txRef = db.collection("transactions").doc(txId);
+                
+                batch.update(txRef, { status: newStatus });
+
+                if (newStatus === 'success') {
+                    const userId = dep.userId || dep.uid;
+                    const userRef = db.collection("users").doc(userId);
+                    batch.update(userRef, {
+                        "depositWallet": firebase.firestore.FieldValue.increment(dep.amount)
+                    });
+                }
+
+                await batch.commit();
+                
+                showToast(`Deposit ${newStatus === 'success' ? 'approved' : 'rejected'} successfully!`, true);
+                await loadTeamTotal();
+                loadDeposits();
+                
+            } catch (error) {
+                console.error("Process error:", error);
+                showToast("Failed to process deposit.", true);
+            }
+        }
+
+        function updateActionBar() {
+            const checked = document.querySelectorAll('.dep-checkbox:checked');
+            const bar = document.getElementById('actionBar');
+            
+            if (checked.length > 0) {
+                bar.style.display = 'flex';
+                document.getElementById('selectedCount').innerText = `${checked.length} selected`;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('.dep-checkbox');
+            if(checkboxes.length === 0) return;
+
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+            updateActionBar();
+        }
+
+        async function deleteSelected() {
+            const checked = document.querySelectorAll('.dep-checkbox:checked');
+            const ids = Array.from(checked).map(cb => cb.value);
+            
+            if (ids.length === 0) return;
+
+            if (!confirm(`Are you sure you want to permanently DELETE ${ids.length} deposit record(s)?`)) return;
+
+            try {
+                const batch = db.batch();
+                ids.forEach(id => {
+                    batch.delete(db.collection("transactions").doc(id));
+                });
+                await batch.commit();
+                
+                showToast(`${ids.length} record(s) deleted.`, true);
+                document.getElementById('actionBar').style.display = 'none';
+                loadDeposits();
+            } catch (error) {
+                console.error("Delete error:", error);
+                showToast("Failed to delete records.", true);
+            }
+        }
+
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = "admin-login.html";
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
