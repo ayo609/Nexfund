@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forensic Date Finder</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f6fc; }
+        .log-box { background: #222; color: #00ff00; padding: 15px; border-radius: 8px; height: 500px; overflow-y: auto; font-family: monospace; font-size: 12px; margin-top: 20px;}
+        .warning { color: #f1fa8c; }
+        .success { color: #50fa7b; }
+        .error { color: #ff5555; }
+    </style>
+</head>
+<body>
+    <h2>🕵️‍♂️ Finding Actual Purchase Dates</h2>
+    <p>Please wait while we scan the profiles of the 18 affected users...</p>
+    <div class="log-box" id="logBox">Scanning...</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0", authDomain: "nexfund-38027.firebaseapp.com", projectId: "nexfund-38027", storageBucket: "nexfund-38027.firebasestorage.app", messagingSenderId: "318202194753", appId: "1:318202194753:web:1bf7471c666acc50174fc0" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function log(msg, cls='') {
+            const box = document.getElementById('logBox');
+            if(box.innerHTML === 'Scanning...') box.innerHTML = '';
+            box.innerHTML += `<div class="${cls}">> ${msg}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function findDates() {
+            const usersSnap = await db.collection("users").get();
+            const invSnap = await db.collection("investments").get();
+            const usersWithInvestments = new Set();
+            invSnap.forEach(doc => { if(doc.data().userId) usersWithInvestments.add(doc.data().userId); });
+
+            let foundCount = 0;
+
+            usersSnap.forEach(userDoc => {
+                const data = userDoc.data();
+                const userId = userDoc.id;
+                
+                // Only look at the missing 18
+                if (usersWithInvestments.has(userId)) return;
+                const purchased = data.purchasedProducts || {};
+                if (Object.keys(purchased).length === 0) return;
+
+                log(`\nChecking User: ${data.phoneNumber || userId}`, 'warning');
+                
+                // Look for common date fields in the user profile
+                const possibleDates = ['lastPurchaseDate', 'updatedAt', 'lastLogin', 'lastActive', 'purchaseDate'];
+                let dateFound = false;
+
+                possibleDates.forEach(field => {
+                    if (data[field]) {
+                        let d = data[field].toDate ? data[field].toDate() : new Date(data[field]);
+                        log(`  ✅ Found hidden date field [${field}]: ${d.toDateString()}`, 'success');
+                        dateFound = true;
+                        foundCount++;
+                    }
+                });
+
+                // Sometimes apps store purchase history in an array or object
+                if (data.purchaseHistory) {
+                    log(`  ✅ Found a 'purchaseHistory' object! We can extract exact times from here.`, 'success');
+                    log(`     History Data: ${JSON.stringify(data.purchaseHistory)}`);
+                    dateFound = true;
+                    foundCount++;
+                }
+
+                if (!dateFound) {
+                    log(`  ❌ No purchase dates found in user profile.`, 'error');
+                }
+            });
+
+            log(`\n--- SCAN DONE ---`);
+            if (foundCount > 0) {
+                log(`We found date data! Take a screenshot of this box and send it to me, so I can write the exact formula to fix it perfectly.`, 'success');
+            } else {
+                log(`Your database does not save the purchase time inside the user profile. It only saves the investment time. Since the investment failed to save, the actual time is lost forever.`, 'error');
+            }
+        }
+
+        findDates();
+    </script>
+</body>
+</html>
