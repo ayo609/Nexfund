@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexfund - My Projects</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --text-dark: #333;
+            --text-gray: #666;
+            --gold-yellow: #d4af37;
+            --success: #00a896;
+            --danger: #e74c3c;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: var(--light-bg);
+        }
+        .page-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .earnings-card {
+            background: #ffffff;
+            margin: 10px 20px 30px 20px;
+            border-radius: 25px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+        .earnings-label {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .earnings-amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gold-yellow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .earnings-amount span { font-size: 30px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-state h2 {
+            font-size: 22px;
+            font-weight: 500;
+            color: #888;
+        }
+
+        .orders-container { padding: 0 15px; }
+        .order-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .order-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 5px;
+            background: var(--primary-blue);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .order-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .order-status {
+            background: #eef2ff;
+            color: var(--primary-blue);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 15px;
+        }
+        .order-status.completed {
+            background: #e8f8f5;
+            color: var(--success);
+        }
+
+        .order-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: #f9fafe;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-label { font-size: 11px; color: var(--text-gray); margin-bottom: 3px; }
+        .detail-value { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .detail-value.profit { color: var(--success); }
+
+        .time-progress-section { margin-top: 15px; }
+        .time-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-gray);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .time-bar-bg {
+            height: 6px;
+            background: #eef2ff;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .time-bar-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .order-card.is-completed .time-bar-fill { background: var(--success); }
+
+        .project-tabs {
+            display: flex;
+            margin: 0 20px 20px 20px;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .project-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-gray);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .project-tab.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #ffffff; display: flex; justify-content: space-around; align-items: center; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(231, 76, 60, 0.95); color: white; padding: 12px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 2000; pointer-events: none; text-align: center; width: max-content; max-width: 90%; }
+        .toast.success { background: rgba(0, 168, 150, 0.95); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .loading-text { text-align: center; color: #888; font-size: 13px; padding: 40px; }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <div class="page-title">My Projects</div>
+    </div>
+
+    <div class="earnings-card">
+        <div class="earnings-label">Total Earnings</div>
+        <div class="earnings-amount" id="totalEarnings">
+            <span>₦</span>0
+        </div>
+    </div>
+
+    <div class="project-tabs">
+        <div class="project-tab active" id="tabActive" onclick="switchTab('active')">Active Orders</div>
+        <div class="project-tab" id="tabCompleted" onclick="switchTab('completed')">Completed</div>
+    </div>
+
+    <div class="orders-container" id="ordersContainer">
+        <div class="empty-state" id="emptyState">
+            <h2>No Orders</h2>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item active"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <div class="toast" id="toast">Message</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let allInvestments = [];
+        let currentTab = 'active';
+
+        function showToast(message, isSuccess = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = 'toast show' + (isSuccess ? ' success' : '');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // ✅ Safe date parser for various formats
+        function parseDate(dateValue) {
+            if (!dateValue) return null;
+            if (typeof dateValue.toDate === 'function') return dateValue.toDate();
+            if (dateValue instanceof Date) return dateValue;
+            if (typeof dateValue === 'string') return new Date(dateValue);
+            if (typeof dateValue === 'number') return new Date(dateValue);
+            return null;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabActive').classList.remove('active');
+            document.getElementById('tabCompleted').classList.remove('active');
+            
+            if (tab === 'active') document.getElementById('tabActive').classList.add('active');
+            else document.getElementById('tabCompleted').classList.add('active');
+
+            renderOrders();
+        }
+
+        async function loadProjects() {
+            if (!auth.currentUser) return;
+
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '<div class="loading-text">Loading your projects...</div>';
+
+            try {
+                // ✅ Fetch ALL investments without orderBy (avoids missing index and missing restored products)
+                const snap = await db.collection("investments")
+                    .where("userId", "==", auth.currentUser.uid)
+                    .get();
+
+                allInvestments = [];
+                snap.forEach(doc => {
+                    allInvestments.push({ id: doc.id, ...doc.data() });
+                });
+
+                // ✅ Manually sort newest first
+                allInvestments.sort((a, b) => {
+                    const dateA = parseDate(a.purchaseDate);
+                    const dateB = parseDate(b.purchaseDate);
+                    if (!dateA && !dateB) return 0;
+                    if (!dateA) return 1;
+                    if (!dateB) return -1;
+                    return dateB.getTime() - dateA.getTime();
+                });
+
+                calculateTotalEarnings();
+                renderOrders();
+
+            } catch (err) {
+                console.error("Error loading projects:", err);
+                container.innerHTML = '<div class="empty-state"><h2>Failed to load projects.</h2></div>';
+            }
+        }
+
+        // ✅ FIXED: Total Earnings = ONLY profit from COMPLETED investments
+        function calculateTotalEarnings() {
+            let totalProfit = 0;
+
+            allInvestments.forEach(inv => {
+                // Only count earnings from COMPLETED investments (money already paid)
+                if (inv.status === 'completed') {
+                    const profit = (inv.expectedReturn || 0) - (inv.amount || 0);
+                    if (profit > 0) {
+                        totalProfit += profit;
+                    }
+                }
+            });
+
+            document.getElementById('totalEarnings').innerHTML = `<span>₦</span>${totalProfit.toLocaleString()}`;
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '';
+
+            const filtered = allInvestments.filter(inv => inv.status === currentTab);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No Orders</h2>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(inv => {
+                const isCompleted = inv.status === 'completed';
+                
+                const amount = inv.amount || 0;
+                const expectedReturn = inv.expectedReturn || 0;
+                const profit = expectedReturn - amount;
+                const duration = inv.duration || 1;
+                
+                // ✅ Safe date parsing
+                const purchaseDate = parseDate(inv.purchaseDate) || new Date();
+                const expiryDate = parseDate(inv.expiryDate) || new Date();
+                const now = new Date();
+
+                let progressPercent = 100;
+                let daysLeftText = 'Matured';
+                
+                if (!isCompleted) {
+                    const totalTime = expiryDate.getTime() - purchaseDate.getTime();
+                    const timePassed = now.getTime() - purchaseDate.getTime();
+                    
+                    if (totalTime > 0) {
+                        progressPercent = Math.min(Math.max((timePassed / totalTime) * 100, 0), 100);
+                    }
+                    
+                    const msLeft = expiryDate.getTime() - now.getTime();
+                    const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+                    daysLeftText = daysLeft > 0 ? `${daysLeft} Days Left` : 'Matures today';
+                }
+
+                const cardHTML = `
+                    <div class="order-card ${isCompleted ? 'is-completed' : ''}">
+                        <div class="order-header">
+                            <div class="order-name">${inv.productName || 'Nexfund Product'}</div>
+                            <div class="order-status ${isCompleted ? 'completed' : ''}">
+                                ${isCompleted ? 'Completed' : 'Active'}
+                            </div>
+                        </div>
+
+                        <div class="order-details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Invested</div>
+                                <div class="detail-value">₦${amount.toLocaleString()}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Total Return</div>
+                                <div class="detail-value">₦${expectedReturn.toLocaleString()}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Profit</div>
+                                <div class="detail-value profit">+₦${profit.toLocaleString()}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Daily Profit</div>
+                                <div class="detail-value">₦${(profit / duration).toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                            </div>
+                        </div>
+
+                        ${!isCompleted ? `
+                            <div class="time-progress-section">
+                                <div class="time-labels">
+                                    <span>Progress</span>
+                                    <span>${daysLeftText}</span>
+                                </div>
+                                <div class="time-bar-bg">
+                                    <div class="time-bar-fill" style="width: ${progressPercent}%;"></div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="time-progress-section">
+                                <div class="time-labels">
+                                    <span>Maturity Date</span>
+                                    <span>${expiryDate.toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadProjects();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+    </script>
+</body>
+</html>
