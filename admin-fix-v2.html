@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cleanup Fake Records</title>
+    <style>body { font-family: sans-serif; padding: 20px; background: #f4f6fc;} .btn { padding: 15px; background: #e74c3c; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 8px; width: 100%; font-weight: bold;} .log { margin-top: 20px; font-family: monospace; background: #222; color: #00ff00; padding: 15px; border-radius: 8px; height: 200px;}</style>
+</head>
+<body>
+    <h2>Step 1: Cleanup Broken Records</h2>
+    <button class="btn" onclick="cleanUp()">Delete Fake Restored Records</button>
+    <div class="log" id="logBox">Waiting...</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0", authDomain: "nexfund-38027.firebaseapp.com", projectId: "nexfund-38027", storageBucket: "nexfund-38027.firebasestorage.app", messagingSenderId: "318202194753", appId: "1:318202194753:web:1bf7471c666acc50174fc0" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        async function cleanUp() {
+            if(!confirm("Delete ALL records marked as 'restoredByAdmin'?")) return;
+            const box = document.getElementById('logBox');
+            box.innerHTML = "Searching for fake records...";
+            
+            const snap = await db.collection("investments").where("restoredByAdmin", "==", true).get();
+            if (snap.size === 0) { box.innerHTML = "No fake records found. You are already clean."; return; }
+            
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            box.innerHTML = `✅ Deleted ${snap.size} fake records. Database is clean.`;
+        }
+    </script>
+</body>
+</html>
