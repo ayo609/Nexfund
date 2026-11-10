@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ROI Audit - Find Missing Payouts</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f6fc; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        .btn { background: #1d3bba; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; margin-bottom: 15px;}
+        .btn:disabled { background: #ccc; }
+        .log-box { background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 8px; height: 500px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.5;}
+        .warning { color: #f1fa8c; }
+        .success { color: #50fa7b; }
+        .error { color: #ff5555; }
+        .info { color: #8be9fd; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: white; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 11px; }
+        th { background: #333; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🕵️‍♂️ ROI Audit (Read-Only)</h2>
+        <p style="font-size: 14px; color: #555; margin-bottom: 15px;">This will scan the database for users who missed their payouts. It will <b>NOT</b> credit any money. It only generates a report.</p>
+        
+        <button class="btn" id="scanBtn" onclick="runAudit()">Run ROI Audit</button>
+        
+        <div class="log-box" id="logBox">Waiting to start...</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0", 
+            authDomain: "nexfund-38027.firebaseapp.com", 
+            projectId: "nexfund-38027", 
+            storageBucket: "nexfund-38027.firebasestorage.app", 
+            messagingSenderId: "318202194753", 
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0" 
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function log(message, type = '') {
+            const box = document.getElementById('logBox');
+            if (box.innerHTML === 'Waiting to start...') box.innerHTML = '';
+            box.innerHTML += `<div class="${type}">> ${message}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function runAudit() {
+            const btn = document.getElementById('scanBtn');
+            btn.disabled = true;
+            btn.innerText = "Auditing Database... Please wait.";
+            document.getElementById('logBox').innerHTML = '';
+            
+            const now = new Date();
+            const auditResults = [];
+
+            log("Fetching all users...", 'info');
+            const usersSnap = await db.collection("users").get();
+            
+            log("Fetching all investments...", 'info');
+            const invSnap = await db.collection("investments").get();
+            
+            // Map investments by userId for fast lookup
+            const investmentsByUser = {};
+            invSnap.forEach(doc => {
+                const data = doc.data();
+                if (!investmentsByUser[data.userId]) investmentsByUser[data.userId] = [];
+                investmentsByUser[data.userId].push({ id: doc.id, ...data });
+            });
+
+            for (const userDoc of usersSnap.docs) {
+                const user = userDoc.data();
+                const userId = userDoc.id;
+                const phone = user.phoneNumber || 'Unknown';
+                const userInvs = investmentsByUser[userId] || [];
+
+                // 1. Check for Ghost Active Investments (Past Expiry, still active)
+                userInvs.forEach(inv => {
+                    if (inv.status !== 'active') return;
+                    
+                    let expiry = null;
+                    if (inv.expiryDate) {
+                        if (typeof inv.expiryDate.toDate === 'function') expiry = inv.expiryDate.toDate();
+                        else expiry = new Date(inv.expiryDate);
+                    }
+
+                    if (expiry && !isNaN(expiry) && expiry < now) {
+                        // It's expired but still marked active
+                        auditResults.push({
+                            phone: phone,
+                            type: 'Ghost Active (Missed Payout)',
+                            product: inv.productName,
+                            amount: inv.amount,
+                            expected: inv.expectedReturn,
+                            status: inv.status,
+                            date: expiry.toLocaleDateString()
+                        });
+                    }
+                });
+
+                // 2. Check for Expired Unpaid (That we might have wrongly tagged)
+                userInvs.forEach(inv => {
+                    if (inv.status === 'expired_unpaid') {
+                        auditResults.push({
+                            phone: phone,
+                            type: 'Tagged Expired_Unpaid',
+                            product: inv.productName,
+                            amount: inv.amount,
+                            expected: inv.expectedReturn,
+                            status: inv.status,
+                            date: inv.expiryDate ? (inv.expiryDate.toDate ? inv.expiryDate.toDate().toLocaleDateString() : 'Unknown') : 'Unknown'
+                        });
+                    }
+                });
+
+                // 3. Check for completely missing records
+                const purchased = user.purchasedProducts || {};
+                const totalPurchased = Object.values(purchased).reduce((sum, c) => sum + (Number(c) || 0), 0);
+                
+                if (totalPurchased > 0 && userInvs.length === 0) {
+                     auditResults.push({
+                        phone: phone,
+                        type: 'Missing Record Entirely',
+                        product: Object.keys(purchased).join(', '),
+                        amount: 'N/A',
+                        expected: 'N/A',
+                        status: 'N/A',
+                        date: 'N/A'
+                    });
+                }
+            }
+
+            // Output Results
+            log(`\n--- AUDIT COMPLETE ---`, 'success');
+            log(`Total Issues Found: ${auditResults.length}`, auditResults.length > 0 ? 'warning' : 'success');
+
+            if (auditResults.length === 0) {
+                log("No missing payouts found. All expired investments have been paid or tagged correctly.", 'success');
+            } else {
+                let html = `<table><tr><th>Phone</th><th>Issue Type</th><th>Product</th><th>Invested</th><th>Expected ROI</th><th>Date</th></tr>`;
+                auditResults.forEach(r => {
+                    const color = r.type.includes('Ghost') ? '#ff5555' : (r.type.includes('Missing') ? '#f1fa8c' : '#8be9fd');
+                    html += `<tr>
+                        <td>${r.phone}</td>
+                        <td style="color:${color}; font-weight:bold;">${r.type}</td>
+                        <td>${r.product}</td>
+                        <td>₦${(r.amount || 0).toLocaleString()}</td>
+                        <td>₦${(r.expected || 0).toLocaleString()}</td>
+                        <td>${r.date}</td>
+                    </tr>`;
+                });
+                html += `</table>`;
+                
+                const box = document.getElementById('logBox');
+                box.innerHTML += html;
+                log(`\nTake a screenshot of this table and send it to me so we can decide how to pay them safely.`, 'warning');
+            }
+
+            btn.disabled = false;
+            btn.innerText = "Run ROI Audit";
+        }
+    </script>
+</body>
+</html>
