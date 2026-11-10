@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nexfund - My Projects</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #1d3bba;
+            --light-bg: #f5f7ff;
+            --card-bg: #ffffff;
+            --text-dark: #222;
+            --text-gray: #666;
+            --success: #00a896;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-bottom: calc(90px + env(safe-area-inset-bottom));
+            overflow-x: hidden;
+        }
+
+        .page {
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* --- HEADER --- */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .back-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--light-bg);
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 18px;
+        }
+        .page-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .header-spacer { width: 40px; }
+
+        /* --- TABS --- */
+        .tab-container {
+            display: flex;
+            background: #fff;
+            padding: 10px 15px;
+            gap: 10px;
+            position: sticky;
+            top: 80px;
+            z-index: 40;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: var(--light-bg);
+            color: var(--text-gray);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 10px rgba(29, 59, 186, 0.2);
+        }
+
+        /* --- PROJECT CARDS --- */
+        .projects-list {
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--primary-blue);
+            position: relative;
+            overflow: hidden;
+        }
+        .project-card.active { border-left-color: var(--primary-blue); }
+        .project-card.completed { border-left-color: var(--success); }
+        .project-card.expired { border-left-color: var(--danger); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .product-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            text-transform: uppercase;
+        }
+        .status-badge.active { background: #eef2ff; color: var(--primary-blue); }
+        .status-badge.completed { background: #e8f8f5; color: var(--success); }
+        .status-badge.expired { background: #fadbd8; color: var(--danger); }
+
+        .card-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 10px;
+            margin-bottom: 15px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-label {
+            font-size: 11px;
+            color: var(--text-gray);
+            margin-bottom: 2px;
+        }
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .detail-value.highlight { color: var(--primary-blue); }
+        .detail-value.success { color: var(--success); }
+        .detail-value.danger { color: var(--danger); }
+
+        /* Progress Bar */
+        .progress-section {
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 1px dashed #e2e8f0;
+        }
+        .progress-text-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+        }
+        .progress-bar-bg {
+            height: 8px;
+            background: #eef2ff;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-gray);
+        }
+        .empty-state i {
+            font-size: 50px;
+            color: #c5cde8;
+            margin-bottom: 15px;
+        }
+        .empty-state p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; 
+            box-sizing: content-box; padding-bottom: env(safe-area-inset-bottom);
+            background: #fff; display: flex; justify-content: space-around; align-items: center; 
+            border-radius: 20px 20px 0 0; box-shadow: 0 -2px 10px rgba(0,0,0,.05); z-index: 100; 
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #999; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary-blue); }
+        .nav-item.center-btn { position: relative; top: -25px; }
+        .center-logo { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,.15); border: 3px solid var(--light-bg); }
+        .center-logo img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+
+        /* Spinner */
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        
+        <!-- HEADER -->
+        <div class="page-header">
+            <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <div class="page-title">My Projects</div>
+            <div class="header-spacer"></div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tab-container">
+            <button class="tab-btn active" id="tabActiveBtn" onclick="switchTab('active')">
+                <i class="fa-solid fa-chart-line"></i> Active
+            </button>
+            <button class="tab-btn" id="tabHistoryBtn" onclick="switchTab('history')">
+                <i class="fa-solid fa-clock-rotate-left"></i> History
+            </button>
+        </div>
+
+        <!-- CONTENT -->
+        <div id="loadingState">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="activeProjectsList" class="projects-list" style="display:none;"></div>
+        <div id="historyProjectsList" class="projects-list" style="display:none;"></div>
+
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+        <a href="projects.html" class="nav-item active"><i class="fa-solid fa-chart-line"></i><span>Projects</span></a>
+        <a href="group.html" class="nav-item center-btn"><div class="center-logo"><img src="logo.png" alt="Nexfund"></div></a>
+        <a href="team.html" class="nav-item"><i class="fa-solid fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item"><i class="fa-solid fa-user"></i><span>Me</span></a>
+    </div>
+
+    <!-- FIREBASE SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnGer9gGagzUmEkzwZnWhNGZ52WBL6vR0",
+            authDomain: "nexfund-38027.firebaseapp.com",
+            projectId: "nexfund-38027",
+            storageBucket: "nexfund-38027.firebasestorage.app",
+            messagingSenderId: "318202194753",
+            appId: "1:318202194753:web:1bf7471c666acc50174fc0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- STATE ---
+        let allMyInvestments = [];
+        let currentTab = 'active';
+
+        // --- UTILS ---
+        function formatDate(dateObj) {
+            if (!dateObj) return 'N/A';
+            try {
+                // Handle Firestore Timestamp or standard Date
+                const d = dateObj.toDate ? dateObj.toDate() : new Date(dateObj);
+                if (isNaN(d.getTime())) return 'Invalid Date';
+                return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            } catch (e) {
+                return 'N/A';
+            }
+        }
+
+        function calculateDaysLeft(expiryDate) {
+            if (!expiryDate) return 0;
+            try {
+                const expiry = expiryDate.toDate ? expiryDate.toDate() : new Date(expiryDate);
+                const now = new Date();
+                const msLeft = expiry.getTime() - now.getTime();
+                if (msLeft <= 0) return 0;
+                return Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        // --- AUTH & INITIALIZATION ---
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            await fetchMyInvestments(user.uid);
+        });
+
+        async function fetchMyInvestments(userId) {
+            try {
+                const snap = await db.collection("investments")
+                    .where("userId", "==", userId)
+                    .get();
+
+                allMyInvestments = [];
+                snap.forEach(doc => {
+                    allMyInvestments.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort by newest purchase first
+                allMyInvestments.sort((a, b) => {
+                    const tA = a.purchaseDate ? (a.purchaseDate.toMillis ? a.purchaseDate.toMillis() : new Date(a.purchaseDate).getTime()) : 0;
+                    const tB = b.purchaseDate ? (b.purchaseDate.toMillis ? b.purchaseDate.toMillis() : new Date(b.purchaseDate).getTime()) : 0;
+                    return tB - tA;
+                });
+
+                document.getElementById('loadingState').style.display = 'none';
+                renderCurrentTab();
+
+            } catch (error) {
+                console.error("Error fetching investments:", error);
+                document.getElementById('loadingState').innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><p>Failed to load projects. Check your internet.</p></div>`;
+            }
+        }
+
+        // --- TAB SWITCHING ---
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            const activeBtn = document.getElementById('tabActiveBtn');
+            const historyBtn = document.getElementById('tabHistoryBtn');
+            
+            if (tab === 'active') {
+                activeBtn.classList.add('active');
+                historyBtn.classList.remove('active');
+                document.getElementById('activeProjectsList').style.display = 'flex';
+                document.getElementById('historyProjectsList').style.display = 'none';
+            } else {
+                historyBtn.classList.add('active');
+                activeBtn.classList.remove('active');
+                document.getElementById('activeProjectsList').style.display = 'none';
+                document.getElementById('historyProjectsList').style.display = 'flex';
+            }
+            renderCurrentTab();
+        }
+
+        // --- RENDERING ---
+        function renderCurrentTab() {
+            if (currentTab === 'active') {
+                renderActiveProjects();
+            } else {
+                renderHistoryProjects();
+            }
+        }
+
+        function renderActiveProjects() {
+            const container = document.getElementById('activeProjectsList');
+            // Strictly filter for status 'active'
+            const activeInvs = allMyInvestments.filter(inv => inv.status === 'active');
+
+            if (activeInvs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <p>You have no active projects.</p>
+                        <a href="dashboard.html" style="display:inline-block; margin-top:15px; background:var(--primary-blue); color:white; padding:10px 20px; border-radius:20px; text-decoration:none; font-size:13px; font-weight:600;">Buy a Product</a>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = activeInvs.map(inv => {
+                const daysLeft = calculateDaysLeft(inv.expiryDate);
+                const totalDays = inv.duration || 1;
+                const daysPassed = totalDays - daysLeft;
+                const progressPct = Math.min(Math.max((daysPassed / totalDays) * 100, 0), 100);
+
+                return `
+                    <div class="project-card active">
+                        <div class="card-header">
+                            <div class="product-name">
+                                <i class="fa-solid fa-box-open" style="color:var(--primary-blue);"></i>
+                                ${inv.productName || 'Unknown Product'}
+                            </div>
+                            <span class="status-badge active">Running</span>
+                        </div>
+
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Invested Amount</span>
+                                <span class="detail-value">₦${(inv.amount || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total Return</span>
+                                <span class="detail-value success">₦${(inv.expectedReturn || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Purchase Date</span>
+                                <span class="detail-value">${formatDate(inv.purchaseDate)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Maturity Date</span>
+                                <span class="detail-value">${formatDate(inv.expiryDate)}</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-section">
+                            <div class="progress-text-row">
+                                <span>Cycle Progress</span>
+                                <span style="color:var(--primary-blue);">${daysLeft} Days Left</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${progressPct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHistoryProjects() {
+            const container = document.getElementById('historyProjectsList');
+            // Filter for anything that is NOT active (completed or expired_unpaid)
+            const historyInvs = allMyInvestments.filter(inv => inv.status !== 'active');
+
+            if (historyInvs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <p>No project history yet.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = historyInvs.map(inv => {
+                // Determine styling based on status
+                const isExpiredUnpaid = inv.status === 'expired_unpaid';
+                const cardClass = isExpiredUnpaid ? 'expired' : 'completed';
+                const badgeClass = isExpiredUnpaid ? 'expired' : 'completed';
+                const badgeText = isExpiredUnpaid ? 'Expired' : 'Completed';
+                
+                // Determine text for return
+                const returnText = isExpiredUnpaid 
+                    ? '<span class="detail-value danger">No Payout</span>' 
+                    : `<span class="detail-value success">₦${(inv.expectedReturn || 0).toLocaleString()}</span>`;
+
+                return `
+                    <div class="project-card ${cardClass}">
+                        <div class="card-header">
+                            <div class="product-name">
+                                <i class="fa-solid fa-box" style="color:var(--text-gray);"></i>
+                                ${inv.productName || 'Unknown Product'}
+                            </div>
+                            <span class="status-badge ${badgeClass}">${badgeText}</span>
+                        </div>
+
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Invested Amount</span>
+                                <span class="detail-value">₦${(inv.amount || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Return</span>
+                                ${returnText}
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Purchased On</span>
+                                <span class="detail-value">${formatDate(inv.purchaseDate)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Ended On</span>
+                                <span class="detail-value">${formatDate(inv.expiryDate)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
